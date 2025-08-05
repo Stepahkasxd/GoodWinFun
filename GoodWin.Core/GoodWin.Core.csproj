@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+	  <TargetFramework>net8.0-windows</TargetFramework>
+	  <UseWPF>false</UseWPF>
+	  <UseWindowsForms>false</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dota2GSI" Version="2.1.1.8897" />
+    <PackageReference Include="InputSimulator" Version="1.0.4" />
+    <PackageReference Include="System.Windows.Extensions" Version="9.0.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GoodWin.Tracker\GoodWin.Tracker.csproj" />
+    <ProjectReference Include="..\GoodWin.Utils\GoodWin.Utils.csproj" />
+  </ItemGroup>
+
+</Project>

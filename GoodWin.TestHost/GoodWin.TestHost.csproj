@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>false</UseWPF>
+    <UseWindowsForms>false</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="InputSimulator" Version="1.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.7" />
+    <PackageReference Include="System.Windows.Extensions" Version="9.0.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GoodWin.Core\GoodWin.Core.csproj" />
+    <ProjectReference Include="..\GoodWin.Debuffs.Easy\GoodWin.Debuffs.Easy.csproj" />
+    <ProjectReference Include="..\GoodWin.Debuffs.Hard\GoodWin.Debuffs.Hard.csproj" />
+    <ProjectReference Include="..\GoodWin.Debuffs.Medium\GoodWin.Debuffs.Medium.csproj" />
+    <ProjectReference Include="..\GoodWin.Tracker\GoodWin.Tracker.csproj" />
+  </ItemGroup>
+
+</Project>

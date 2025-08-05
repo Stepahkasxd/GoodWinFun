@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
+    <PackageReference Include="Extended.Wpf.Toolkit" Version="4.5.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GoodWin.Core\GoodWin.Core.csproj" />
+    <ProjectReference Include="..\GoodWin.Tracker\GoodWin.Tracker.csproj" />
+    <ProjectReference Include="..\GoodWin.Debuffs\GoodWin.Debuffs.csproj" />
+    <ProjectReference Include="..\GoodWin.Debuffs.Easy\GoodWin.Debuffs.Easy.csproj" />
+    <ProjectReference Include="..\GoodWin.Debuffs.Medium\GoodWin.Debuffs.Medium.csproj" />
+    <ProjectReference Include="..\GoodWin.Debuffs.Hard\GoodWin.Debuffs.Hard.csproj" />
+    <ProjectReference Include="..\GoodWin.Utils\GoodWin.Utils.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Exclude deprecated configurator window -->
+    <Compile Remove="Views/RouletteConfiguratorWindow.xaml.cs" />
+    <Page Remove="Views/RouletteConfiguratorWindow.xaml" />
+  </ItemGroup>
+</Project>

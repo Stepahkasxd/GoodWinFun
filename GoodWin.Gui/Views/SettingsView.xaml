@@ -1,0 +1,81 @@
+<UserControl x:Class="GoodWin.Gui.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:GoodWin.Gui.ViewModels">
+    <UserControl.DataContext>
+        <vm:SettingsViewModel />
+    </UserControl.DataContext>
+    <StackPanel Margin="10">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200" />
+                <ColumnDefinition Width="200" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBlock Text="Первый скилл" Grid.Row="0" />
+            <TextBox Text="{Binding FirstSkill}" Grid.Column="1" Grid.Row="0" />
+            <TextBlock Text="Второй скилл" Grid.Row="1" />
+            <TextBox Text="{Binding SecondSkill}" Grid.Column="1" Grid.Row="1" />
+            <TextBlock Text="Третий скилл" Grid.Row="2" />
+            <TextBox Text="{Binding ThirdSkill}" Grid.Column="1" Grid.Row="2" />
+            <TextBlock Text="Ультимейт" Grid.Row="3" />
+            <TextBox Text="{Binding Ultimate}" Grid.Column="1" Grid.Row="3" />
+            <TextBlock Text="Предмет 1" Grid.Row="4" />
+            <TextBox Text="{Binding ItemSlot1}" Grid.Column="1" Grid.Row="4" />
+            <TextBlock Text="Предмет 2" Grid.Row="5" />
+            <TextBox Text="{Binding ItemSlot2}" Grid.Column="1" Grid.Row="5" />
+            <TextBlock Text="Предмет 3" Grid.Row="6" />
+            <TextBox Text="{Binding ItemSlot3}" Grid.Column="1" Grid.Row="6" />
+            <TextBlock Text="Предмет 4" Grid.Row="7" />
+            <TextBox Text="{Binding ItemSlot4}" Grid.Column="1" Grid.Row="7" />
+            <TextBlock Text="Предмет 5" Grid.Row="8" />
+            <TextBox Text="{Binding ItemSlot5}" Grid.Column="1" Grid.Row="8" />
+            <TextBlock Text="Предмет 6" Grid.Row="9" />
+            <TextBox Text="{Binding ItemSlot6}" Grid.Column="1" Grid.Row="9" />
+            <TextBlock Text="Консоль" Grid.Row="10" />
+            <TextBox Text="{Binding ConsoleKey}" Grid.Column="1" Grid.Row="10" />
+            <TextBlock Text="Открыть чат" Grid.Row="11" />
+            <TextBox Text="{Binding ChatKey}" Grid.Column="1" Grid.Row="11" />
+            <TextBlock Text="Общий чат" Grid.Row="12" />
+            <TextBox Text="{Binding TeamChatKey}" Grid.Column="1" Grid.Row="12" />
+            <TextBlock Text="Easy мин" Grid.Row="13" />
+            <TextBox Text="{Binding EasyMinSpins}" Grid.Column="1" Grid.Row="13" />
+            <TextBlock Text="Easy макс" Grid.Row="14" />
+            <TextBox Text="{Binding EasyMaxSpins}" Grid.Column="1" Grid.Row="14" />
+            <TextBlock Text="Medium мин" Grid.Row="15" />
+            <TextBox Text="{Binding MediumMinSpins}" Grid.Column="1" Grid.Row="15" />
+            <TextBlock Text="Medium макс" Grid.Row="16" />
+            <TextBox Text="{Binding MediumMaxSpins}" Grid.Column="1" Grid.Row="16" />
+            <TextBlock Text="Hard шанс/мин" Grid.Row="17" />
+            <TextBox Text="{Binding HardChancePerMinute}" Grid.Column="1" Grid.Row="17" />
+        </Grid>
+        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+            <TextBlock Text="Путь к config-файлу" VerticalAlignment="Center" />
+            <TextBox Text="{Binding ConfigPath}" Width="200" Margin="5,0,0,0" />
+            <Button Content="Обзор..." Command="{Binding BrowseConfigCommand}" Margin="5,0,0,0" />
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+            <Button Content="Сохранить" Command="{Binding SaveCommand}" Width="100" />
+            <Button Content="Сбросить" Command="{Binding ResetCommand}" Width="100" Margin="5,0,0,0" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>
