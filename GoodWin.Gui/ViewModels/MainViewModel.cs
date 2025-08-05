@@ -20,6 +20,7 @@ namespace GoodWin.Gui.ViewModels
         private readonly RouletteService _roulette = new();
         private readonly DotaConfigService _configService = new();
         private readonly DispatcherTimer _timer;
+        private bool _debuffActive;
 
         public ObservableCollection<string> EventLog { get; } = new();
         public ObservableCollection<IDebuff> AllDebuffs { get; } = new();
@@ -198,20 +199,57 @@ namespace GoodWin.Gui.ViewModels
 
         private void OnDebuffSelectionPending()
         {
-            var phase = (DebuffPhase)_scheduler.CurrentStage;
-            var events = _registry.GetAllEntries()
-                .Where(e => e.Schedule.Phase == phase)
-                .Select(e => new Event
-                {
-                    Name = e.Debuff.Name,
-                    Logic = e.Debuff.Apply
-                }).ToList();
-            if (events.Count == 0)
+            if (_debuffActive)
             {
                 _scheduler.Allow();
                 return;
             }
-            _roulette.ShowRouletteForEvents(events, () => _scheduler.Allow());
+
+            DebuffPhase? phase = _scheduler.CurrentStage switch
+            {
+                Stage.Easy => DebuffPhase.Easy,
+                Stage.Medium => DebuffPhase.Medium,
+                Stage.Hard => DebuffPhase.Hard,
+                _ => null
+            };
+            if (phase == null)
+            {
+                _scheduler.Allow();
+                return;
+            }
+
+            var entries = _registry.GetAllEntries()
+                .Where(e => e.Schedule.Phase == phase)
+                .ToList();
+            if (entries.Count == 0)
+            {
+                _scheduler.Allow();
+                return;
+            }
+
+            var events = entries.Select(e => new Event
+            {
+                Name = e.Debuff.Name,
+                Logic = () => RunDebuff(e)
+            }).ToList();
+
+            _roulette.ShowRouletteForEvents(events, null);
+        }
+
+        private async void RunDebuff(ScheduledDebuffEntry entry)
+        {
+            _debuffActive = true;
+            entry.Debuff.Apply();
+            try
+            {
+                await Task.Delay(entry.Schedule.DurationSeconds * 1000);
+            }
+            finally
+            {
+                entry.Debuff.Remove();
+                _debuffActive = false;
+                _scheduler.Allow();
+            }
         }
     }
 }

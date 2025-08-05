@@ -4,7 +4,7 @@ using WindowsInput.Native;
 
 namespace GoodWin.Debuffs.Medium
 {
-    [DebuffSchedule(DebuffPhase.Medium, 15, 30, 1)]
+    [DebuffSchedule(DebuffPhase.Medium, 15, 30, 60)]
     public class AutoSkillDebuff : DebuffBase, IInputDebuff
     {
         private readonly InputSimulator _sim = new InputSimulator();

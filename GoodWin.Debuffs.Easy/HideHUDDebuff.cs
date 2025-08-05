@@ -4,7 +4,7 @@ using GoodWin.Utils;
 
 namespace GoodWin.Debuffs.Easy
 {
-    [DebuffSchedule(DebuffPhase.Easy, 10, 15, 30)]
+    [DebuffSchedule(DebuffPhase.Easy, 10, 15, 60)]
     public class HideHUDDebuff : DebuffBase
     {
         public override string Name => "Скрыть HUD";
