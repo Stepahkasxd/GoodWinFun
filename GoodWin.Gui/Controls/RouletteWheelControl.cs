@@ -35,7 +35,6 @@ namespace GoodWin.Gui.Controls
                 new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         private readonly RotateTransform _rotate = new RotateTransform(0);
-        private static readonly Random _rand = new();
 
         public RouletteWheelControl()
         {
@@ -102,25 +101,31 @@ namespace GoodWin.Gui.Controls
 
                 if (!string.IsNullOrEmpty(seg.Label))
                 {
+                    double arcLength = Math.PI * radius * 0.6 * angle / 180.0;
                     var text = new FormattedText(
                         seg.Label,
                         CultureInfo.CurrentCulture,
                         FlowDirection.LeftToRight,
                         new Typeface("Segoe UI"),
                         14,
-                        Brushes.White,
+                        Brushes.Black,
                         VisualTreeHelper.GetDpi(this).PixelsPerDip)
                     {
-                        TextAlignment = TextAlignment.Center
+                        TextAlignment = TextAlignment.Center,
+                        Trimming = TextTrimming.CharacterEllipsis,
+                        MaxTextWidth = arcLength
                     };
                     var midAngle = (angle * i + angle / 2) * Math.PI / 180;
                     var textPoint = new Point(
                         center.X + radius * 0.6 * Math.Cos(midAngle),
                         center.Y + radius * 0.6 * Math.Sin(midAngle));
-                    var textBrush = Brushes.White.Clone();
-                    textBrush.Opacity = seg.Opacity * WheelOpacity;
-                    text.SetForegroundBrush(textBrush);
-                    dc.DrawText(text, textPoint);
+                    var fill = Brushes.Black.Clone();
+                    var stroke = Brushes.White.Clone();
+                    double opacity = seg.Opacity * WheelOpacity;
+                    fill.Opacity = opacity;
+                    stroke.Opacity = opacity;
+                    var geometry = text.BuildGeometry(new Point(textPoint.X - text.Width / 2, textPoint.Y - text.Height / 2));
+                    dc.DrawGeometry(fill, new Pen(stroke, 1), geometry);
                 }
             }
         }
@@ -141,18 +146,19 @@ namespace GoodWin.Gui.Controls
             return geom;
         }
 
-        public void Spin(int durationMs, Action<Models.RouletteSegment> onCompleted)
+        public void Spin(int durationMs, int targetIndex, Action<Models.RouletteSegment> onCompleted)
         {
-            if (Segments.Count == 0)
+            if (Segments.Count == 0 || targetIndex < 0 || targetIndex >= Segments.Count)
                 return;
-            int index = _rand.Next(Segments.Count);
             double angle = 360.0 / Segments.Count;
-            double targetAngle = -(index * angle + angle / 2 + 360 * 3);
+            double targetAngle = -(targetIndex * angle + angle / 2 + 360 * 3);
             var anim = new DoubleAnimation(targetAngle, TimeSpan.FromMilliseconds(durationMs))
             {
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                AccelerationRatio = 0.1,
+                DecelerationRatio = 0.9,
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
             };
-            anim.Completed += (s, e) => onCompleted?.Invoke(Segments[index]);
+            anim.Completed += (s, e) => onCompleted?.Invoke(Segments[targetIndex]);
             _rotate.BeginAnimation(RotateTransform.AngleProperty, anim);
         }
     }

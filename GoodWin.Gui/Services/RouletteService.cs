@@ -14,6 +14,7 @@ namespace GoodWin.Gui.Services
     {
         private readonly UserSettingsService _settings = new("usersettings.json");
         private RouletteWindow? _window;
+        private static readonly Random _rand = new();
 
         public void ShowRouletteForEvents(IEnumerable<Event> events, Action? onCompleted = null)
         {
@@ -72,8 +73,10 @@ namespace GoodWin.Gui.Services
             _window.WheelControl.Segments = segments;
             _window.WheelControl.WheelOpacity = _settings.Settings.Roulette.WheelOpacity;
 
+            int index = _rand.Next(segments.Count);
+
             _window.Show();
-            _window.WheelControl.Spin(_settings.Settings.Roulette.SpinDuration, seg =>
+            _window.WheelControl.Spin(_settings.Settings.Roulette.SpinDuration, index, seg =>
             {
                 async void Run()
                 {
