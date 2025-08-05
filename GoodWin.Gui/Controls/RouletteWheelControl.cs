@@ -3,6 +3,9 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Globalization;
+using System.Collections.Generic;
+using System.IO;
+using System.Windows.Media.Imaging;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -36,6 +39,11 @@ namespace GoodWin.Gui.Controls
 
         private readonly RotateTransform _rotate = new RotateTransform(0);
 
+        private readonly Dictionary<Models.RouletteSegment, Brush> _brushCache = new();
+        private readonly Dictionary<Models.RouletteSegment, ImageBrush?> _imageCache = new();
+        private readonly Dictionary<Models.RouletteSegment, FormattedText?> _textCache = new();
+        private readonly BrushConverter _brushConverter = new();
+
         public RouletteWheelControl()
         {
             Segments = new ObservableCollection<Models.RouletteSegment>();
@@ -50,13 +58,21 @@ namespace GoodWin.Gui.Controls
             {
                 oldCollection.CollectionChanged -= control.SegmentsCollectionChanged;
                 foreach (var seg in oldCollection)
+                {
                     seg.PropertyChanged -= control.SegmentPropertyChanged;
+                    control._brushCache.Remove(seg);
+                    control._imageCache.Remove(seg);
+                    control._textCache.Remove(seg);
+                }
             }
             if (e.NewValue is ObservableCollection<Models.RouletteSegment> newCollection)
             {
                 newCollection.CollectionChanged += control.SegmentsCollectionChanged;
                 foreach (var seg in newCollection)
+                {
                     seg.PropertyChanged += control.SegmentPropertyChanged;
+                    control.UpdateSegmentCache(seg);
+                }
             }
             control.InvalidateVisual();
         }
@@ -65,16 +81,48 @@ namespace GoodWin.Gui.Controls
         {
             if (e.OldItems != null)
                 foreach (Models.RouletteSegment seg in e.OldItems)
+                {
                     seg.PropertyChanged -= SegmentPropertyChanged;
+                    _brushCache.Remove(seg);
+                    _imageCache.Remove(seg);
+                    _textCache.Remove(seg);
+                }
             if (e.NewItems != null)
                 foreach (Models.RouletteSegment seg in e.NewItems)
+                {
                     seg.PropertyChanged += SegmentPropertyChanged;
+                    UpdateSegmentCache(seg);
+                }
             InvalidateVisual();
         }
 
         private void SegmentPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
+            if (sender is Models.RouletteSegment seg)
+                UpdateSegmentCache(seg);
             InvalidateVisual();
+        }
+
+        private void UpdateSegmentCache(Models.RouletteSegment seg)
+        {
+            _brushCache[seg] = (Brush)_brushConverter.ConvertFromString(seg.ColorHex);
+            _imageCache[seg] = !string.IsNullOrEmpty(seg.ImagePath) && File.Exists(seg.ImagePath)
+                ? new ImageBrush(new BitmapImage(new Uri(seg.ImagePath, UriKind.Absolute)))
+                : null;
+            _textCache[seg] = !string.IsNullOrEmpty(seg.Label)
+                ? new FormattedText(
+                    seg.Label,
+                    CultureInfo.CurrentCulture,
+                    FlowDirection.LeftToRight,
+                    new Typeface("Segoe UI"),
+                    14,
+                    Brushes.Black,
+                    VisualTreeHelper.GetDpi(this).PixelsPerDip)
+                {
+                    TextAlignment = TextAlignment.Center,
+                    Trimming = TextTrimming.CharacterEllipsis
+                }
+                : null;
         }
 
         protected override void OnRender(DrawingContext dc)
@@ -88,45 +136,25 @@ namespace GoodWin.Gui.Controls
             for (int i = 0; i < Segments.Count; i++)
             {
                 var seg = Segments[i];
-                Brush brush = (Brush)new BrushConverter().ConvertFromString(seg.ColorHex);
-                brush.Opacity = seg.Opacity * WheelOpacity;
                 var geom = CreateSlice(center, radius, angle * i, angle);
-                dc.DrawGeometry(brush, null, geom);
-                if (!string.IsNullOrEmpty(seg.ImagePath) && System.IO.File.Exists(seg.ImagePath))
-                {
-                    var img = new ImageBrush(new System.Windows.Media.Imaging.BitmapImage(new Uri(seg.ImagePath, UriKind.Absolute)));
-                    img.Opacity = seg.Opacity * WheelOpacity;
+                dc.PushOpacity(seg.Opacity * WheelOpacity);
+                if (_brushCache.TryGetValue(seg, out var brush))
+                    dc.DrawGeometry(brush, null, geom);
+                if (_imageCache.TryGetValue(seg, out var img) && img != null)
                     dc.DrawGeometry(img, null, geom);
-                }
 
-                if (!string.IsNullOrEmpty(seg.Label))
+                if (_textCache.TryGetValue(seg, out var text) && text != null)
                 {
                     double arcLength = Math.PI * radius * 0.6 * angle / 180.0;
-                    var text = new FormattedText(
-                        seg.Label,
-                        CultureInfo.CurrentCulture,
-                        FlowDirection.LeftToRight,
-                        new Typeface("Segoe UI"),
-                        14,
-                        Brushes.Black,
-                        VisualTreeHelper.GetDpi(this).PixelsPerDip)
-                    {
-                        TextAlignment = TextAlignment.Center,
-                        Trimming = TextTrimming.CharacterEllipsis,
-                        MaxTextWidth = arcLength
-                    };
+                    text.MaxTextWidth = arcLength;
                     var midAngle = (angle * i + angle / 2) * Math.PI / 180;
                     var textPoint = new Point(
                         center.X + radius * 0.6 * Math.Cos(midAngle),
                         center.Y + radius * 0.6 * Math.Sin(midAngle));
-                    var fill = Brushes.Black.Clone();
-                    var stroke = Brushes.White.Clone();
-                    double opacity = seg.Opacity * WheelOpacity;
-                    fill.Opacity = opacity;
-                    stroke.Opacity = opacity;
                     var geometry = text.BuildGeometry(new Point(textPoint.X - text.Width / 2, textPoint.Y - text.Height / 2));
-                    dc.DrawGeometry(fill, new Pen(stroke, 1), geometry);
+                    dc.DrawGeometry(Brushes.Black, new Pen(Brushes.White, 1), geometry);
                 }
+                dc.Pop();
             }
         }
 

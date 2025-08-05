@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using GoodWin.Core;
 using GoodWin.Tracker;
 using GoodWin.Gui.Services;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -24,6 +25,7 @@ namespace GoodWin.Gui.ViewModels
 
         public ObservableCollection<string> EventLog { get; } = new();
         public ObservableCollection<IDebuff> AllDebuffs { get; } = new();
+        public ObservableCollection<string> DebugLog => DebugLogService.Entries;
 
         [ObservableProperty] private IDebuff? selectedDebuff;
         partial void OnSelectedDebuffChanged(IDebuff? value) => TestDebuffCommand.NotifyCanExecuteChanged();
@@ -50,14 +52,20 @@ namespace GoodWin.Gui.ViewModels
         public IRelayCommand StartDotaCommand { get; }
         public IRelayCommand BrowseConfigCommand { get; }
         public IRelayCommand InitConfigCommand { get; }
-        public IRelayCommand InitCommandsCommand { get; }
+        public IAsyncRelayCommand InitCommandsCommand { get; }
 
         public MainViewModel()
         {
             _listener = new GsiListenerService(3000);
             _listener.OnNewGameState += gs =>
             {
-                _scheduler.Update(gs.Map.ClockTime);
+                var clock = gs.Map?.ClockTime;
+                if (clock == null)
+                {
+                    DebugLogService.Log("GSI map data missing");
+                    return;
+                }
+                _scheduler.Update(clock.Value);
                 System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
                     EventLog.Add(DateTime.Now.ToString("T") + " - событие");
@@ -76,7 +84,7 @@ namespace GoodWin.Gui.ViewModels
             StartDotaCommand = new RelayCommand(StartDota);
             BrowseConfigCommand = new RelayCommand(BrowseConfig);
             InitConfigCommand = new RelayCommand(InitConfigs, () => !string.IsNullOrWhiteSpace(ConfigPath));
-            InitCommandsCommand = new RelayCommand(InitCommands, () => CanInitCommands);
+            InitCommandsCommand = new AsyncRelayCommand(InitCommands, () => CanInitCommands);
 
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
             _timer.Tick += (s, e) => CheckDotaProcess();
@@ -103,10 +111,18 @@ namespace GoodWin.Gui.ViewModels
             InitCommandsCommand.NotifyCanExecuteChanged();
         }
 
-        private void InitCommands()
+        private async Task InitCommands()
         {
             if (string.IsNullOrWhiteSpace(ConfigPath)) return;
-            Task.Run(() => _configService.InitializeCommands(ConfigPath));
+            try
+            {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                await _configService.InitializeCommandsAsync(ConfigPath, cts.Token);
+            }
+            catch (Exception ex)
+            {
+                DebugLogService.Log($"InitCommands failed: {ex.Message}");
+            }
         }
 
         private void LoadDebuffs()
@@ -118,10 +134,16 @@ namespace GoodWin.Gui.ViewModels
                 foreach (var file in System.IO.Directory.GetFiles(dir, "GoodWin.Debuffs*.dll"))
                 {
                     try { System.Reflection.Assembly.LoadFrom(file); }
-                    catch { /* ignore missing assemblies */ }
+                    catch (Exception ex)
+                    {
+                        DebugLogService.Log($"Failed to load assembly {file}: {ex.Message}");
+                    }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                DebugLogService.Log($"Error scanning debuff assemblies: {ex.Message}");
+            }
             // Ensure debuff assemblies are loaded before scanning types
             var referenced = System.Reflection.Assembly
                 .GetExecutingAssembly()
@@ -134,9 +156,9 @@ namespace GoodWin.Gui.ViewModels
                 {
                     System.Reflection.Assembly.Load(name);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // ignore loading failures
+                    DebugLogService.Log($"Failed to load referenced assembly {name.Name}: {ex.Message}");
                 }
             }
 
@@ -152,9 +174,9 @@ namespace GoodWin.Gui.ViewModels
                     if (Activator.CreateInstance(t) is IDebuff deb)
                         _registry.Register(deb);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // skip debuffs that fail to instantiate or register
+                    DebugLogService.Log($"Debuff {t.Name} failed to load: {ex.Message}");
                 }
             }
         }

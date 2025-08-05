@@ -22,6 +22,7 @@ namespace GoodWin.Utils
         private readonly HookProc _msProc;
 
         private readonly HashSet<byte> _blockedKeys = new();
+        private readonly object _blockedKeysLock = new();
         private int _blockAllKeys;
         private int _invertY;
         private int _mouseLag;
@@ -67,7 +68,12 @@ namespace GoodWin.Utils
             if (nCode >= 0)
             {
                 int vk = Marshal.ReadInt32(lParam) & 0xFF;
-                if (_blockAllKeys > 0 || _blockedKeys.Contains((byte)vk))
+                bool blocked;
+                lock (_blockedKeysLock)
+                {
+                    blocked = _blockedKeys.Contains((byte)vk);
+                }
+                if (_blockAllKeys > 0 || blocked)
                     return new IntPtr(1);
                 if (_inputLag > 0)
                     Thread.Sleep(500);
@@ -158,8 +164,16 @@ namespace GoodWin.Utils
 
         public void Cmd(string cmd) => SendConsoleCommand(cmd);
 
-        public void BlockKey(int vk) => _blockedKeys.Add((byte)vk);
-        public void UnblockKey(int vk) => _blockedKeys.Remove((byte)vk);
+        public void BlockKey(int vk)
+        {
+            lock (_blockedKeysLock)
+                _blockedKeys.Add((byte)vk);
+        }
+        public void UnblockKey(int vk)
+        {
+            lock (_blockedKeysLock)
+                _blockedKeys.Remove((byte)vk);
+        }
 
         public void BlockAllKeys()
         {
