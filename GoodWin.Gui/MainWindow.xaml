@@ -81,5 +81,10 @@
         <TabItem Header="Настройки">
             <views:SettingsView />
         </TabItem>
+        <TabItem Header="Debug">
+            <Grid Margin="10">
+                <ListBox ItemsSource="{Binding DebugLog}" />
+            </Grid>
+        </TabItem>
     </TabControl>
 </Window>

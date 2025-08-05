@@ -34,3 +34,6 @@ This document records the changes made across the debuff system to ensure stable
 - *Method*: Deleted unusable Ping debuff and its references to avoid dead code.
 
 These updates stabilize debuff interactions, ensure resources are cleaned up, and make each debuff reversible.
+
+## UI roadmap
+The current WPF interface is a minimal skeleton intended for testing. When the project grows, plan for a full-stack UI revamp with custom controls, animations and design polish.

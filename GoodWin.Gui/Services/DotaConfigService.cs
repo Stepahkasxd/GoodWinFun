@@ -1,6 +1,8 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using GoodWin.Utils;
 
 namespace GoodWin.Gui.Services
@@ -49,24 +51,29 @@ namespace GoodWin.Gui.Services
             return Configs.All(c => File.Exists(Path.Combine(path, c.File)));
         }
 
-        public void InitializeCommands(string path)
+        public async Task InitializeCommandsAsync(string path, CancellationToken token)
         {
             if (!ConfigsExist(path)) return;
+
+            var start = DateTime.UtcNow;
             while (!WindowHelper.IsDota2Active())
             {
-                Thread.Sleep(500);
+                token.ThrowIfCancellationRequested();
+                if ((DateTime.UtcNow - start).TotalSeconds > 30)
+                    throw new TimeoutException("Dota 2 window not found");
+                await Task.Delay(500, token);
             }
 
             const int ConsoleKey = 0xDC;
             const int EnterKey = 0x0D;
             InputHookHost.Instance.SendKey(ConsoleKey);
-            Thread.Sleep(100);
+            await Task.Delay(100, token);
             foreach (var (key, file) in Bindings)
             {
                 InputHookHost.Instance.SendText($"bind \"{key}\" \"exec {file}\"");
-                Thread.Sleep(50);
+                await Task.Delay(50, token);
                 InputHookHost.Instance.SendKey(EnterKey);
-                Thread.Sleep(50);
+                await Task.Delay(50, token);
             }
             InputHookHost.Instance.SendKey(ConsoleKey);
         }
