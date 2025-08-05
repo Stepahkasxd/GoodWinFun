@@ -10,19 +10,20 @@ namespace GoodWin.Debuffs.Hard
     public class NoirDebuff : DebuffBase
     {
         private const int Duration = 30;
+        private Guid _overlayId;
         public override string Name => "Нуар-фильтр";
         public override void Apply()
         {
-            OverlayWindow.Instance.AddOverlay(dc =>
+            _overlayId = OverlayWindow.Instance.AddOverlay(dc =>
             {
                 var rect = new Rect(0, 0, SystemParameters.PrimaryScreenWidth, SystemParameters.PrimaryScreenHeight);
-                dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(128, 0, 0, 0)), null, rect);
+                dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(180, 128, 128, 128)), null, rect);
             });
             Console.WriteLine($"[Noir] applied for {Duration}s");
         }
         public override void Remove()
         {
-            OverlayWindow.Instance.ClearOverlays();
+            OverlayWindow.Instance.RemoveOverlay(_overlayId);
             Console.WriteLine("[Noir] removed");
         }
     }

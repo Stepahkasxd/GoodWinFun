@@ -20,13 +20,10 @@
 		<ProjectReference Include="..\GoodWin.Utils\GoodWin.Utils.csproj" />
 	</ItemGroup>
 	
-	<ItemGroup>
-		<Content Include="sound_1.wav">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</Content>
-		<Content Include="sound_2.wav">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</Content>
-	</ItemGroup>
+        <ItemGroup>
+                <Content Include="Sounds\*.wav">
+                        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+                </Content>
+        </ItemGroup>
 
 </Project>

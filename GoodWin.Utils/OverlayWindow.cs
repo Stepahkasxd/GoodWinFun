@@ -15,7 +15,7 @@ namespace GoodWin.Utils
     {
         private static OverlayWindow? _instance;
         private static readonly object _lock = new();
-        private readonly List<Action<DrawingContext>> _drawActions = new();
+        private readonly Dictionary<Guid, Action<DrawingContext>> _drawActions = new();
 
         /// <summary>
         /// Получить единственный экземпляр окна-оверлея.
@@ -72,13 +72,27 @@ namespace GoodWin.Utils
             Background = System.Windows.Media.Brushes.Transparent; // явно WPF-кисть
             Topmost = true;
             ShowInTaskbar = false;
+            Width = SystemParameters.PrimaryScreenWidth;
+            Height = SystemParameters.PrimaryScreenHeight;
+            Left = 0;
+            Top = 0;
         }
 
         /// <summary>
         /// Добавить действие рисования, вызываемое каждый кадр.
         /// </summary>
-        public void AddOverlay(Action<DrawingContext> draw)
-            => Dispatcher.Invoke(() => _drawActions.Add(draw));
+        public Guid AddOverlay(Action<DrawingContext> draw)
+        {
+            var id = Guid.NewGuid();
+            Dispatcher.Invoke(() => _drawActions[id] = draw);
+            return id;
+        }
+
+        /// <summary>
+        /// Удалить действие рисования по идентификатору.
+        /// </summary>
+        public void RemoveOverlay(Guid id)
+            => Dispatcher.Invoke(() => _drawActions.Remove(id));
 
         /// <summary>
         /// Очистить все действия рисования.
@@ -89,7 +103,7 @@ namespace GoodWin.Utils
         protected override void OnRender(DrawingContext drawingContext)
         {
             base.OnRender(drawingContext);
-            foreach (var action in _drawActions)
+            foreach (var action in _drawActions.Values)
                 action(drawingContext);
         }
 

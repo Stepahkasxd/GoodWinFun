@@ -16,8 +16,10 @@ namespace GoodWin.Debuffs.Medium
         }
         public override void Apply()
         {
-            _sim.Keyboard.KeyPress((VirtualKeyCode)Enum.Parse(typeof(VirtualKeyCode), "VK_" + _slot1));
-            _sim.Keyboard.KeyPress((VirtualKeyCode)Enum.Parse(typeof(VirtualKeyCode), "VK_" + _slot3));
+            if (Enum.TryParse("VK_" + _slot1, out VirtualKeyCode key1))
+                _sim.Keyboard.KeyPress(key1);
+            if (Enum.TryParse("VK_" + _slot3, out VirtualKeyCode key3))
+                _sim.Keyboard.KeyPress(key3);
         }
         public override void Remove() { }
     }
