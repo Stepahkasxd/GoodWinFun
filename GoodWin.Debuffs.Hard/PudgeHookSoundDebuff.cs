@@ -5,7 +5,7 @@ using GoodWin.Core;
 
 namespace GoodWin.Debuffs.Hard
 {
-    [DebuffSchedule(DebuffPhase.Hard, 30, 999, 5)]
+    [DebuffSchedule(DebuffPhase.Hard, 30, 999, 60)]
     public class PudgeHookSoundDebuff : DebuffBase, IAudioDebuff
     {
         public override string Name => "Меня хукнули?";

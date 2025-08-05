@@ -3,7 +3,7 @@
 namespace GoodWin.Core
 {
     /// <summary>
-    /// Фаза применения дебаффов (Easy: 0–10 мин, Medium: 10–20, Hard: >20).
+    /// Фаза применения дебаффов (Easy: 10–20 мин, Medium: 20–30, Hard: >30).
     /// </summary>
     public enum DebuffPhase
     {

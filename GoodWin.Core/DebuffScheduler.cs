@@ -7,6 +7,8 @@ namespace GoodWin.Core
     /// </summary>
     public enum Stage
     {
+        /// <summary>Начальная фаза без дебаффов (0–10 минут).</summary>
+        Warmup,
         Easy,
         Medium,
         Hard
@@ -31,7 +33,7 @@ namespace GoodWin.Core
         public bool HardEnabled { get; private set; } = true;
 
         // Текущая стадия (фаза) игры.
-        private Stage _currentStage = Stage.Easy;
+        private Stage _currentStage = Stage.Warmup;
         public Stage CurrentStage => _currentStage;
 
         // Флаг ожидания подтверждения (паузы планировщика до вызова Allow()).
@@ -54,26 +56,17 @@ namespace GoodWin.Core
         private readonly int _hardChancePercent = 19; // шанс (%), что дебафф сработает в Hard-стадии каждую секунду.
 
         // Пороговые значения времени для перехода стадий (в секундах).
-        private readonly double _easyStageDuration = 600.0;   // 0–10 мин (Easy)
-        private readonly double _mediumStageDuration = 1200.0; // 10–20 мин (Medium)
-        // Hard начинается после 20-й минуты (> 1200.0 секунд).
+        private readonly double _warmupStageDuration = 600.0;   // 0–10 мин (без дебаффов)
+        private readonly double _easyStageDuration = 1200.0;    // 10–20 мин (Easy)
+        private readonly double _mediumStageDuration = 1800.0;  // 20–30 мин (Medium)
+        // Hard начинается после 30-й минуты (> 1800.0 секунд).
 
         public DebuffScheduler()
         {
             // Инициализация начальной стадии и планирование первого дебаффа.
-            _currentStage = Stage.Easy;
-            if (IsStageEnabled(_currentStage))
-            {
-                _triggersRemaining = GetInitialTriggerCount(Stage.Easy);
-                _nextTriggerTime = (_triggersRemaining > 0)
-                    ? CalculateNextTriggerTime(0.0, Stage.Easy, _triggersRemaining)
-                    : double.PositiveInfinity;
-            }
-            else
-            {
-                _triggersRemaining = 0;
-                _nextTriggerTime = double.PositiveInfinity;
-            }
+            _currentStage = Stage.Warmup;
+            _triggersRemaining = 0;
+            _nextTriggerTime = double.PositiveInfinity;
         }
 
         /// <summary>
@@ -206,25 +199,15 @@ namespace GoodWin.Core
         /// </summary>
         private void Reset(double gameTime = 0.0)
         {
-            _currentStage = Stage.Easy;
+            _currentStage = Stage.Warmup;
             _waitingForAllow = false;
             _lastGameTime = gameTime;
-            if (IsStageEnabled(_currentStage))
-            {
-                _triggersRemaining = GetInitialTriggerCount(Stage.Easy);
-                _nextTriggerTime = (_triggersRemaining > 0)
-                    ? CalculateNextTriggerTime(gameTime, Stage.Easy, _triggersRemaining)
-                    : double.PositiveInfinity;
-            }
-            else
-            {
-                _triggersRemaining = 0;
-                _nextTriggerTime = double.PositiveInfinity;
-            }
+            _triggersRemaining = 0;
+            _nextTriggerTime = double.PositiveInfinity;
         }
 
         /// <summary>
-        /// Определяет стадию игры (Easy, Medium или Hard) по текущему времени.
+        /// Определяет стадию игры (Warmup, Easy, Medium или Hard) по текущему времени.
         /// </summary>
         private Stage DetermineStage(double gameTime)
         {
@@ -232,7 +215,9 @@ namespace GoodWin.Core
                 return Stage.Hard;
             if (gameTime >= _easyStageDuration)
                 return Stage.Medium;
-            return Stage.Easy;
+            if (gameTime >= _warmupStageDuration)
+                return Stage.Easy;
+            return Stage.Warmup;
         }
 
         /// <summary>
@@ -240,6 +225,7 @@ namespace GoodWin.Core
         /// </summary>
         private bool IsStageEnabled(Stage stage) => stage switch
         {
+            Stage.Warmup => false,
             Stage.Easy => EasyEnabled,
             Stage.Medium => MediumEnabled,
             Stage.Hard => HardEnabled,
@@ -273,9 +259,13 @@ namespace GoodWin.Core
         private double CalculateNextTriggerTime(double currentTime, Stage stage, int triggersRemaining)
         {
             // Определяем конец текущей стадии в секундах.
-            double stageEndTime = (stage == Stage.Easy) ? _easyStageDuration :
-                                   (stage == Stage.Medium) ? _mediumStageDuration :
-                                   double.PositiveInfinity;
+            double stageEndTime = stage switch
+            {
+                Stage.Easy => _easyStageDuration,
+                Stage.Medium => _mediumStageDuration,
+                Stage.Warmup => _warmupStageDuration,
+                _ => double.PositiveInfinity
+            };
             if (triggersRemaining <= 0 || stageEndTime == double.PositiveInfinity)
             {
                 // Защита: не рассчитуем если нет оставшихся дебаффов или стадия Hard (бесконечная).
