@@ -22,10 +22,12 @@ namespace GoodWin.Utils
         private readonly HookProc _msProc;
 
         private readonly HashSet<byte> _blockedKeys = new();
-        private bool _blockAllKeys;
-        private bool _invertY;
-        private bool _mouseLag;
-        private bool _inputLag;
+        private int _blockAllKeys;
+        private int _invertY;
+        private int _mouseLag;
+        private int _inputLag;
+        private POINT _lastMousePt;
+        private bool _hasLastPt;
 
         private InputHookHost()
         {
@@ -65,9 +67,9 @@ namespace GoodWin.Utils
             if (nCode >= 0)
             {
                 int vk = Marshal.ReadInt32(lParam) & 0xFF;
-                if ((_blockAllKeys && WindowHelper.IsDota2Active()) || _blockedKeys.Contains((byte)vk))
+                if (_blockAllKeys > 0 || _blockedKeys.Contains((byte)vk))
                     return new IntPtr(1);
-                if (_inputLag)
+                if (_inputLag > 0)
                     Thread.Sleep(500);
             }
             return CallNextHookEx(_keyboardHook, nCode, wParam, lParam);
@@ -92,14 +94,23 @@ namespace GoodWin.Utils
         {
             if (nCode >= 0 && wParam == (IntPtr)WM_MOUSEMOVE)
             {
-                if (_mouseLag)
-                    Thread.Sleep(200);
-                if (_invertY)
+                var data = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
+                if (!_hasLastPt)
                 {
-                    var data = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
-                    mouse_event(MOUSEEVENTF_MOVE, (uint)data.pt.x, (uint)-data.pt.y, 0, UIntPtr.Zero);
+                    _lastMousePt = data.pt;
+                    _hasLastPt = true;
+                }
+                if (_mouseLag > 0)
+                    Thread.Sleep(200);
+                if (_invertY > 0)
+                {
+                    int dx = data.pt.x - _lastMousePt.x;
+                    int dy = data.pt.y - _lastMousePt.y;
+                    _lastMousePt = data.pt;
+                    mouse_event(MOUSEEVENTF_MOVE, dx, -dy, 0, UIntPtr.Zero);
                     return new IntPtr(1);
                 }
+                _lastMousePt = data.pt;
             }
             return CallNextHookEx(_mouseHook, nCode, wParam, lParam);
         }
@@ -141,11 +152,45 @@ namespace GoodWin.Utils
 
         public void BlockKey(int vk) => _blockedKeys.Add((byte)vk);
         public void UnblockKey(int vk) => _blockedKeys.Remove((byte)vk);
-        public void BlockAllKeys() => _blockAllKeys = true;
-        public void UnblockAllKeys() => _blockAllKeys = false;
-        public void SetInvertY(bool on) => _invertY = on;
-        public void SetMouseLag(bool on) => _mouseLag = on;
-        public void SetInputLag(bool on) => _inputLag = on;
+
+        public void BlockAllKeys()
+        {
+            if (Interlocked.Increment(ref _blockAllKeys) == 1)
+                BlockInput(true);
+        }
+
+        public void UnblockAllKeys()
+        {
+            if (Interlocked.Decrement(ref _blockAllKeys) <= 0)
+            {
+                _blockAllKeys = 0;
+                BlockInput(false);
+            }
+        }
+
+        public void SetInvertY(bool on)
+        {
+            if (on)
+                Interlocked.Increment(ref _invertY);
+            else if (Interlocked.Decrement(ref _invertY) < 0)
+                _invertY = 0;
+        }
+
+        public void SetMouseLag(bool on)
+        {
+            if (on)
+                Interlocked.Increment(ref _mouseLag);
+            else if (Interlocked.Decrement(ref _mouseLag) < 0)
+                _mouseLag = 0;
+        }
+
+        public void SetInputLag(bool on)
+        {
+            if (on)
+                Interlocked.Increment(ref _inputLag);
+            else if (Interlocked.Decrement(ref _inputLag) < 0)
+                _inputLag = 0;
+        }
 
         public void Dispose()
         {
@@ -162,6 +207,7 @@ namespace GoodWin.Utils
         private static extern bool UnhookWindowsHookEx(IntPtr hhk);
         [DllImport("user32.dll")] private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
         [DllImport("kernel32.dll", CharSet = CharSet.Auto)] private static extern IntPtr GetModuleHandle(string lpModuleName);
-        [DllImport("user32.dll")] private static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, UIntPtr dwExtraInfo);
+        [DllImport("user32.dll")] private static extern void mouse_event(uint dwFlags, int dx, int dy, uint dwData, UIntPtr dwExtraInfo);
+        [DllImport("user32.dll")] private static extern bool BlockInput(bool fBlockIt);
     }
 }
