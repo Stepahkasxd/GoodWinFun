@@ -15,8 +15,8 @@ This document records the changes made across the debuff system to ensure stable
 - *Method*: Reduced per-key and message delays and introduced a cancellation token checked in the send loop.
 
 ## Audio debuffs
-- **DisableKeyboardDebuff** and **PudgeHookSoundDebuff** play bundled WAV files.
-- *Method*: Added Sounds folder with content files, used `SoundPlayer` in `using` blocks, and invoked `BlockInput` to disable keyboard input in the game.
+- **DisableKeyboardDebuff** and **PudgeHookSoundDebuff** play WAV files found in the `Sounds` folder (files are not included in the repository).
+- *Method*: Added `Sounds` folder support, used `SoundPlayer` in `using` blocks, and invoked `BlockInput` to disable keyboard input in the game.
 
 ## Overlay and visual effects
 - **NoirDebuff** overlays a full-screen grayscale filter and cleans up with a handle instead of clearing all overlays.

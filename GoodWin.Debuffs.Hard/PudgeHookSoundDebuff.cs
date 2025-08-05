@@ -11,10 +11,10 @@ namespace GoodWin.Debuffs.Hard
         public override string Name => "Меня хукнули?";
         public override void Apply()
         {
-            var path = Path.Combine(AppContext.BaseDirectory, "pudge_hook.wav");
+            var path = Path.Combine(AppContext.BaseDirectory, "Sounds", "pudge_hook.wav");
             if (File.Exists(path))
             {
-                var player = new SoundPlayer(path);
+                using var player = new SoundPlayer(path);
                 player.Play();
             }
             else

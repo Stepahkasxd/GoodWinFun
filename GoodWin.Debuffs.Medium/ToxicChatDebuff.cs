@@ -1,6 +1,7 @@
-﻿using GoodWin.Core;
+using GoodWin.Core;
 using GoodWin.Utils;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -16,38 +17,40 @@ namespace GoodWin.Debuffs.Medium
             "You're trash!",
             "Report this noob",
             "Go feeders!",
-            "Learn to play!"
+            "Learn to play!",
         };
+
+        private CancellationTokenSource? _cts;
 
         public override void Apply()
         {
+            _cts = new CancellationTokenSource();
+            var token = _cts.Token;
             _ = Task.Run(async () =>
             {
                 var rnd = new Random();
                 var end = DateTime.UtcNow.AddSeconds(60);
-                while (DateTime.UtcNow < end)
+                while (!token.IsCancellationRequested && DateTime.UtcNow < end)
                 {
-                    // открыть чат
                     InputHookHost.Instance.SendKey((int)Keys.Enter);
-                    await Task.Delay(50);
-                    // общий чат
+                    await Task.Delay(10, token);
                     InputHookHost.Instance.SendKey((int)Keys.Tab);
-                    await Task.Delay(50);
+                    await Task.Delay(10, token);
 
-                    // написать сообщение
                     var msg = _lines[rnd.Next(_lines.Length)];
                     InputHookHost.Instance.SendText(msg);
                     InputHookHost.Instance.SendKey((int)Keys.Enter);
 
-                    await Task.Delay(5000);
+                    await Task.Delay(1000, token);
                 }
-            });
+            }, token);
 
             Console.WriteLine("[ToxicChat] Запущен на 60 сек.");
         }
 
         public override void Remove()
         {
+            _cts?.Cancel();
             Console.WriteLine("[ToxicChat] Дебафф завершён");
         }
     }
