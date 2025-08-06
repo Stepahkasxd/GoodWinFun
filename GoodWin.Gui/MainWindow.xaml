@@ -72,6 +72,7 @@
                     <ListBox ItemsSource="{Binding EventLog}" Height="200" />
                     <TextBlock Text="{Binding GsiStatus}" Margin="0,10,0,0" />
                     <Button Content="Запустить Dota 2" Command="{Binding StartDotaCommand}" Visibility="{Binding IsDotaRunning, Converter={StaticResource BoolInvertVisibilityConverter}}" Margin="0,5,0,0" />
+                    <CheckBox Content="Проверить отслеживание героя" IsChecked="{Binding IsHeroTrackingEnabled}" Margin="0,5,0,0" />
                 </StackPanel>
             </Grid>
         </TabItem>

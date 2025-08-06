@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using GoodWin.Core;
 using GoodWin.Tracker;
 using GoodWin.Gui.Services;
+using GoodWin.Utils;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -53,6 +54,14 @@ namespace GoodWin.Gui.ViewModels
         public IRelayCommand BrowseConfigCommand { get; }
         public IRelayCommand InitConfigCommand { get; }
         public IAsyncRelayCommand InitCommandsCommand { get; }
+
+        private HeroDetector? _heroDetector;
+        private Guid _heroOverlayId;
+        private System.Drawing.Point _heroPoint;
+
+        [ObservableProperty]
+        private bool isHeroTrackingEnabled;
+        partial void OnIsHeroTrackingEnabledChanged(bool value) => ToggleHeroTracking(value);
 
         public MainViewModel()
         {
@@ -217,6 +226,38 @@ namespace GoodWin.Gui.ViewModels
         private void CheckDotaProcess()
         {
             IsDotaRunning = System.Diagnostics.Process.GetProcessesByName("dota2").Any();
+        }
+
+        private void ToggleHeroTracking(bool enabled)
+        {
+            if (enabled)
+            {
+                var capture = new ScreenCaptureService(60);
+                var bounds = System.Windows.Forms.Screen.PrimaryScreen.Bounds;
+                var minimapRect = new System.Drawing.Rectangle(0, bounds.Height - 256, 256, 256);
+                _heroDetector = new HeroDetector(capture, minimapRect);
+                _heroDetector.HeroPositionUpdated += pos =>
+                {
+                    _heroPoint = pos;
+                    OverlayWindow.Instance.Dispatcher.Invoke(() => OverlayWindow.Instance.InvalidateVisual());
+                };
+                _heroOverlayId = OverlayWindow.Instance.AddOverlay(dc =>
+                {
+                    var brush = System.Windows.Media.Brushes.Red;
+                    dc.DrawEllipse(null, new System.Windows.Media.Pen(brush, 3), new System.Windows.Point(_heroPoint.X, _heroPoint.Y), 15, 15);
+                });
+                _heroDetector.Start();
+            }
+            else
+            {
+                if (_heroDetector != null)
+                {
+                    _heroDetector.Stop();
+                    _heroDetector.Dispose();
+                    _heroDetector = null;
+                }
+                OverlayWindow.Instance.RemoveOverlay(_heroOverlayId);
+            }
         }
 
         private void OnDebuffSelectionPending()
