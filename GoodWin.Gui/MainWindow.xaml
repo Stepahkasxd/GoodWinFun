@@ -5,12 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:GoodWin.Gui.ViewModels"
         xmlns:views="clr-namespace:GoodWin.Gui.Views"
-        xmlns:conv="clr-namespace:GoodWin.Gui.Converters"
         mc:Ignorable="d"
         Title="GoodWin Debuff" Height="600" Width="800" WindowStartupLocation="CenterScreen">
     <Window.Resources>
-        <conv:BoolInvertVisibilityConverter x:Key="BoolInvertVisibilityConverter" />
-
         <!-- Navigation TabControl style -->
         <Style TargetType="TabControl">
             <Setter Property="Template">
