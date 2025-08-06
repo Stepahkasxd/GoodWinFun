@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Linq;
+using System.Drawing.Imaging;
 
 namespace GoodWin.Tracker
 {
@@ -24,24 +25,37 @@ namespace GoodWin.Tracker
             _capture.FrameCaptured += ProcessFrame;
         }
 
-        private void ProcessFrame(Bitmap frame)
+        private unsafe void ProcessFrame(Bitmap frame)
         {
             try
             {
-                var roi = frame.Clone(_minimapRect, frame.PixelFormat);
+                using var roi = frame.Clone(_minimapRect, frame.PixelFormat);
                 var points = new System.Collections.Generic.List<Point>();
-                for (int y = 0; y < roi.Height; y++)
+                var data = roi.LockBits(new Rectangle(0, 0, roi.Width, roi.Height), ImageLockMode.ReadOnly, roi.PixelFormat);
+                try
                 {
-                    for (int x = 0; x < roi.Width; x++)
+                    int stride = data.Stride;
+                    int bpp = Image.GetPixelFormatSize(roi.PixelFormat) / 8;
+                    byte* ptr = (byte*)data.Scan0;
+                    for (int y = 0; y < roi.Height; y++)
                     {
-                        var color = roi.GetPixel(x, y);
-                        if (color.G > 200 && color.R < 100 && color.B < 100)
+                        byte* row = ptr + y * stride;
+                        for (int x = 0; x < roi.Width; x++)
                         {
-                            points.Add(new Point(x, y));
+                            byte* pixel = row + x * bpp;
+                            byte b = pixel[0];
+                            byte g = pixel[1];
+                            byte r = pixel[2];
+                            if (g > 200 && r < 100 && b < 100)
+                                points.Add(new Point(x, y));
                         }
                     }
                 }
-                roi.Dispose();
+                finally
+                {
+                    roi.UnlockBits(data);
+                }
+
                 if (points.Count == 0)
                     return;
 

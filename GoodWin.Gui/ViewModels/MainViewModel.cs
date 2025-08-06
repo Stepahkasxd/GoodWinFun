@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -21,6 +22,7 @@ namespace GoodWin.Gui.ViewModels
         private readonly DebuffsRegistry _registry = new();
         private readonly DebuffScheduler _scheduler = new();
         private readonly DotaConfigService _configService = new();
+        private readonly UserSettingsService _settingsService = new("usersettings.json");
         private readonly DispatcherTimer _timer;
         private bool _debuffActive;
 
@@ -46,7 +48,7 @@ namespace GoodWin.Gui.ViewModels
 
         [ObservableProperty] private bool canInitCommands;
 
-        public IRelayCommand<IDebuff> RunDebuffCommand { get; }
+        public IAsyncRelayCommand<IDebuff> RunDebuffCommand { get; }
         public IRelayCommand StartDotaCommand { get; }
         public IRelayCommand BrowseConfigCommand { get; }
         public IRelayCommand InitConfigCommand { get; }
@@ -86,7 +88,7 @@ namespace GoodWin.Gui.ViewModels
             LoadDebuffs();
             UpdateDebuffFilters();
 
-            RunDebuffCommand = new RelayCommand<IDebuff>(RunManualDebuff);
+            RunDebuffCommand = new AsyncRelayCommand<IDebuff>(RunManualDebuff);
             StartDotaCommand = new RelayCommand(StartDota);
             BrowseConfigCommand = new RelayCommand(BrowseConfig);
             InitConfigCommand = new RelayCommand(InitConfigs, () => !string.IsNullOrWhiteSpace(ConfigPath));
@@ -177,14 +179,66 @@ namespace GoodWin.Gui.ViewModels
             {
                 try
                 {
-                    if (Activator.CreateInstance(t) is IDebuff deb)
-                        _registry.Register(deb);
+                    IDebuff? debuff = null;
+                    var ctor = t.GetConstructors().OrderBy(c => c.GetParameters().Length).FirstOrDefault();
+                    if (ctor != null)
+                    {
+                        var parameters = ctor.GetParameters();
+                        if (parameters.Length == 0)
+                        {
+                            debuff = Activator.CreateInstance(t) as IDebuff;
+                        }
+                        else
+                        {
+                            var args = new object?[parameters.Length];
+                            bool ok = true;
+                            for (int i = 0; i < parameters.Length; i++)
+                            {
+                                var val = GetSettingValue(parameters[i].Name);
+                                if (val == null)
+                                {
+                                    ok = false;
+                                    break;
+                                }
+                                args[i] = Convert.ChangeType(val, parameters[i].ParameterType);
+                            }
+                            if (ok)
+                                debuff = Activator.CreateInstance(t, args) as IDebuff;
+                            else
+                                DebugLogService.Log($"Debuff {t.Name} skipped: missing parameters");
+                        }
+                    }
+                    if (debuff != null)
+                        _registry.Register(debuff);
                 }
                 catch (Exception ex)
                 {
                     DebugLogService.Log($"Debuff {t.Name} failed to load: {ex.Message}");
                 }
             }
+        }
+
+        private object? GetSettingValue(string name)
+        {
+            return GetSettingValueRecursive(_settingsService.Settings, name);
+        }
+
+        private object? GetSettingValueRecursive(object obj, string name)
+        {
+            var props = obj.GetType().GetProperties();
+            foreach (var prop in props)
+            {
+                var val = prop.GetValue(obj);
+                if (string.Equals(prop.Name, name, StringComparison.OrdinalIgnoreCase))
+                    return val;
+                if (val != null && !prop.PropertyType.IsPrimitive && prop.PropertyType != typeof(string))
+                {
+                    var found = GetSettingValueRecursive(val, name);
+                    if (found != null)
+                        return found;
+                }
+            }
+            return null;
         }
 
         private void UpdateDebuffFilters()
@@ -204,13 +258,28 @@ namespace GoodWin.Gui.ViewModels
             OnPropertyChanged(nameof(AnyCategoryEnabled));
         }
 
-        private async void RunManualDebuff(IDebuff debuff)
+        private async Task RunManualDebuff(IDebuff debuff)
         {
             var notify = new DebuffNotificationWindow(debuff.Name, "Описание дебаффа");
             notify.Show();
             await Task.Delay(3000);
             notify.Close();
-            debuff.Apply();
+            var attr = debuff.GetType().GetCustomAttribute<DebuffScheduleAttribute>();
+            var duration = attr?.DurationSeconds ?? 60;
+            try
+            {
+                debuff.Apply();
+                await Task.Delay(duration * 1000);
+            }
+            catch (Exception ex)
+            {
+                DebugLogService.Log($"Manual debuff {debuff.Name} error: {ex.Message}");
+            }
+            finally
+            {
+                debuff.Remove();
+                EventLog.Add(DateTime.Now.ToString("T") + $" - {debuff.Name} завершён");
+            }
         }
 
         private void StartDota()
@@ -291,19 +360,26 @@ namespace GoodWin.Gui.ViewModels
             }
 
             var entry = entries[_rand.Next(entries.Count)];
-            StartDebuff(entry);
+            _ = StartDebuff(entry);
         }
 
-        private async void StartDebuff(ScheduledDebuffEntry entry)
+        private async Task StartDebuff(ScheduledDebuffEntry entry)
         {
             var notify = new DebuffNotificationWindow(entry.Debuff.Name, "Описание дебаффа");
             notify.Show();
             await Task.Delay(3000);
             notify.Close();
-            RunDebuff(entry);
+            try
+            {
+                await RunDebuff(entry);
+            }
+            catch (Exception ex)
+            {
+                DebugLogService.Log($"Debuff {entry.Debuff.Name} error: {ex.Message}");
+            }
         }
 
-        private async void RunDebuff(ScheduledDebuffEntry entry)
+        private async Task RunDebuff(ScheduledDebuffEntry entry)
         {
             _debuffActive = true;
             entry.Debuff.Apply();
