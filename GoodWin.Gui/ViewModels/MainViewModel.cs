@@ -266,7 +266,6 @@ namespace GoodWin.Gui.ViewModels
         }
 
         private readonly Random _rand = new();
-
         private void OnDebuffSelectionPending()
         {
             if (_debuffActive)
