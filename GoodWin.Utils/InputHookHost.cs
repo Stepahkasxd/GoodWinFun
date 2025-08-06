@@ -121,6 +121,12 @@ namespace GoodWin.Utils
                         }
                         if (_mouseLag > 0)
                             Thread.Sleep(200);
+                        int screenHeight = Screen.PrimaryScreen.Bounds.Height;
+                        if (data.pt.y <= 0 || data.pt.y >= screenHeight - 1)
+                        {
+                            _lastMousePt = data.pt;
+                            return CallNextHookEx(_mouseHook, nCode, wParam, lParam);
+                        }
                         if (_invertY > 0)
                         {
                             int dx = data.pt.x - _lastMousePt.x;
