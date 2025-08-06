@@ -164,9 +164,13 @@ namespace GoodWin.Utils
         private void SendConsoleCommand(string cmd)
         {
             const byte CK = 0xDC;
-            SendKey(CK); Thread.Sleep(5);
-            SendText(cmd); Thread.Sleep(5);
-            SendKey((int)Keys.Enter); Thread.Sleep(5);
+            const int Delay = 1;
+            SendKey(CK);
+            Thread.Sleep(Delay);
+            SendText(cmd);
+            Thread.Sleep(Delay);
+            SendKey((int)Keys.Enter);
+            Thread.Sleep(Delay);
             SendKey(CK);
         }
 
