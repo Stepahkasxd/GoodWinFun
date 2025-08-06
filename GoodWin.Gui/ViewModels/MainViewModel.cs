@@ -28,9 +28,6 @@ namespace GoodWin.Gui.ViewModels
         public ObservableCollection<IDebuff> AllDebuffs { get; } = new();
         public ObservableCollection<string> DebugLog => DebugLogService.Entries;
 
-        [ObservableProperty] private IDebuff? selectedDebuff;
-        partial void OnSelectedDebuffChanged(IDebuff? value) => TestDebuffCommand.NotifyCanExecuteChanged();
-
         [ObservableProperty] private bool easyEnabled = true;
         [ObservableProperty] private bool mediumEnabled = true;
         [ObservableProperty] private bool hardEnabled = true;
@@ -49,7 +46,7 @@ namespace GoodWin.Gui.ViewModels
 
         [ObservableProperty] private bool canInitCommands;
 
-        public IRelayCommand TestDebuffCommand { get; }
+        public IRelayCommand<IDebuff> RunDebuffCommand { get; }
         public IRelayCommand StartDotaCommand { get; }
         public IRelayCommand BrowseConfigCommand { get; }
         public IRelayCommand InitConfigCommand { get; }
@@ -89,7 +86,7 @@ namespace GoodWin.Gui.ViewModels
             LoadDebuffs();
             UpdateDebuffFilters();
 
-            TestDebuffCommand = new RelayCommand(TestDebuff, () => SelectedDebuff != null);
+            RunDebuffCommand = new RelayCommand<IDebuff>(RunManualDebuff);
             StartDotaCommand = new RelayCommand(StartDota);
             BrowseConfigCommand = new RelayCommand(BrowseConfig);
             InitConfigCommand = new RelayCommand(InitConfigs, () => !string.IsNullOrWhiteSpace(ConfigPath));
@@ -202,21 +199,18 @@ namespace GoodWin.Gui.ViewModels
                     AllDebuffs.Add(entry.Debuff);
                 }
             }
-            if (SelectedDebuff != null && !AllDebuffs.Contains(SelectedDebuff))
-                SelectedDebuff = null;
 
             _scheduler.SetEnabledStages(EasyEnabled, MediumEnabled, HardEnabled);
             OnPropertyChanged(nameof(AnyCategoryEnabled));
         }
 
-        private async void TestDebuff()
+        private async void RunManualDebuff(IDebuff debuff)
         {
-            if (SelectedDebuff == null) return;
-            var notify = new DebuffNotificationWindow(SelectedDebuff.Name, "Описание дебаффа");
+            var notify = new DebuffNotificationWindow(debuff.Name, "Описание дебаффа");
             notify.Show();
             await Task.Delay(3000);
             notify.Close();
-            SelectedDebuff.Apply();
+            debuff.Apply();
         }
 
         private void StartDota()
