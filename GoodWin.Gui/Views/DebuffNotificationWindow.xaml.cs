@@ -4,10 +4,11 @@ namespace GoodWin.Gui.Views
 {
     public partial class DebuffNotificationWindow : Window
     {
-        public DebuffNotificationWindow(string message)
+        public DebuffNotificationWindow(string title, string description)
         {
             InitializeComponent();
-            MessageText.Text = message;
+            TitleText.Text = title;
+            DescriptionText.Text = description;
         }
     }
 }

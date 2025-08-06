@@ -7,6 +7,8 @@ using CommunityToolkit.Mvvm.Input;
 using GoodWin.Core;
 using GoodWin.Tracker;
 using GoodWin.Gui.Services;
+using GoodWin.Utils;
+using GoodWin.Gui.Views;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -18,7 +20,6 @@ namespace GoodWin.Gui.ViewModels
         private readonly GsiListenerService _listener;
         private readonly DebuffsRegistry _registry = new();
         private readonly DebuffScheduler _scheduler = new();
-        private readonly RouletteService _roulette = new();
         private readonly DotaConfigService _configService = new();
         private readonly DispatcherTimer _timer;
         private bool _debuffActive;
@@ -53,6 +54,14 @@ namespace GoodWin.Gui.ViewModels
         public IRelayCommand BrowseConfigCommand { get; }
         public IRelayCommand InitConfigCommand { get; }
         public IAsyncRelayCommand InitCommandsCommand { get; }
+
+        private HeroDetector? _heroDetector;
+        private Guid _heroOverlayId;
+        private System.Drawing.Point _heroPoint;
+
+        [ObservableProperty]
+        private bool isHeroTrackingEnabled;
+        partial void OnIsHeroTrackingEnabledChanged(bool value) => ToggleHeroTracking(value);
 
         public MainViewModel()
         {
@@ -200,9 +209,14 @@ namespace GoodWin.Gui.ViewModels
             OnPropertyChanged(nameof(AnyCategoryEnabled));
         }
 
-        private void TestDebuff()
+        private async void TestDebuff()
         {
-            SelectedDebuff?.Apply();
+            if (SelectedDebuff == null) return;
+            var notify = new DebuffNotificationWindow(SelectedDebuff.Name, "Описание дебаффа");
+            notify.Show();
+            await Task.Delay(3000);
+            notify.Close();
+            SelectedDebuff.Apply();
         }
 
         private void StartDota()
@@ -218,6 +232,40 @@ namespace GoodWin.Gui.ViewModels
         {
             IsDotaRunning = System.Diagnostics.Process.GetProcessesByName("dota2").Any();
         }
+
+        private void ToggleHeroTracking(bool enabled)
+        {
+            if (enabled)
+            {
+                var capture = new ScreenCaptureService(60);
+                var bounds = System.Windows.Forms.Screen.PrimaryScreen.Bounds;
+                var minimapRect = new System.Drawing.Rectangle(0, bounds.Height - 256, 256, 256);
+                _heroDetector = new HeroDetector(capture, minimapRect);
+                _heroDetector.HeroPositionUpdated += pos =>
+                {
+                    _heroPoint = pos;
+                    OverlayWindow.Instance.Dispatcher.Invoke(() => OverlayWindow.Instance.InvalidateVisual());
+                };
+                _heroOverlayId = OverlayWindow.Instance.AddOverlay(dc =>
+                {
+                    var brush = System.Windows.Media.Brushes.Red;
+                    dc.DrawEllipse(null, new System.Windows.Media.Pen(brush, 3), new System.Windows.Point(_heroPoint.X, _heroPoint.Y), 15, 15);
+                });
+                _heroDetector.Start();
+            }
+            else
+            {
+                if (_heroDetector != null)
+                {
+                    _heroDetector.Stop();
+                    _heroDetector.Dispose();
+                    _heroDetector = null;
+                }
+                OverlayWindow.Instance.RemoveOverlay(_heroOverlayId);
+            }
+        }
+
+        private readonly Random _rand = new();
 
         private void OnDebuffSelectionPending()
         {
@@ -249,13 +297,17 @@ namespace GoodWin.Gui.ViewModels
                 return;
             }
 
-            var events = entries.Select(e => new Event
-            {
-                Name = e.Debuff.Name,
-                Logic = () => RunDebuff(e)
-            }).ToList();
+            var entry = entries[_rand.Next(entries.Count)];
+            StartDebuff(entry);
+        }
 
-            _roulette.ShowRouletteForEvents(events, null);
+        private async void StartDebuff(ScheduledDebuffEntry entry)
+        {
+            var notify = new DebuffNotificationWindow(entry.Debuff.Name, "Описание дебаффа");
+            notify.Show();
+            await Task.Delay(3000);
+            notify.Close();
+            RunDebuff(entry);
         }
 
         private async void RunDebuff(ScheduledDebuffEntry entry)
