@@ -23,7 +23,7 @@ namespace GoodWin.Utils
 
         const uint INPUT_KEYBOARD = 1;
         const uint KEYEVENTF_KEYUP = 0x0002;
-        const ushort VK_OEM_3 = 0xC0; // '~'
+        const ushort VK_OEM_5 = 0xDC; // '\'
         const ushort VK_RETURN = 0x0D;
         const ushort VK_SHIFT = 0x10;
 
@@ -77,8 +77,8 @@ namespace GoodWin.Utils
                 });
             }
 
-            // open console '~'
-            Key(VK_OEM_3); Key(VK_OEM_3, true);
+            // open console '\'
+            Key(VK_OEM_5); Key(VK_OEM_5, true);
             // type command
             foreach (char c in command)
             {
@@ -93,7 +93,7 @@ namespace GoodWin.Utils
             // enter
             Key(VK_RETURN); Key(VK_RETURN, true);
             // close console
-            Key(VK_OEM_3); Key(VK_OEM_3, true);
+            Key(VK_OEM_5); Key(VK_OEM_5, true);
 
             SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf(typeof(INPUT)));
             SetForegroundWindow(prevWnd);

@@ -55,10 +55,18 @@
                     <CheckBox Content="Easy" IsChecked="{Binding EasyEnabled}" />
                     <CheckBox Content="Medium" IsChecked="{Binding MediumEnabled}" />
                     <CheckBox Content="Hard" IsChecked="{Binding HardEnabled}" />
-                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                        <ComboBox Width="200" ItemsSource="{Binding AllDebuffs}" SelectedItem="{Binding SelectedDebuff}" DisplayMemberPath="Name" IsEnabled="{Binding AnyCategoryEnabled}" />
-                        <Button Content="Дебафф" Command="{Binding TestDebuffCommand}" Margin="5,0,0,0" IsEnabled="{Binding AnyCategoryEnabled}" />
-                    </StackPanel>
+                    <ListBox ItemsSource="{Binding AllDebuffs}" Margin="0,10,0,0" IsEnabled="{Binding AnyCategoryEnabled}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Name}" Width="200"/>
+                                    <Button Content="Запустить"
+                                            Command="{Binding DataContext.RunDebuffCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                            CommandParameter="{Binding}" Margin="5,0,0,0"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                     <TextBlock Text="Путь к cfg" Margin="0,10,0,0" />
                     <StackPanel Orientation="Horizontal">
                         <TextBox Width="200" Text="{Binding ConfigPath}" />
