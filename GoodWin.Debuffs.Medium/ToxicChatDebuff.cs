@@ -28,12 +28,13 @@ namespace GoodWin.Debuffs.Medium
         };
 
         private CancellationTokenSource? _cts;
+        private Task? _task;
 
         public override void Apply()
         {
             _cts = new CancellationTokenSource();
             var token = _cts.Token;
-            _ = Task.Run(async () =>
+            _task = Task.Run(async () =>
             {
                 var rnd = new Random();
                 var end = DateTime.UtcNow.AddSeconds(60);
@@ -63,7 +64,14 @@ namespace GoodWin.Debuffs.Medium
 
         public override void Remove()
         {
-            _cts?.Cancel();
+            if (_cts != null)
+            {
+                _cts.Cancel();
+                try { _task?.Wait(); } catch (AggregateException ae) { ae.Handle(e => e is TaskCanceledException); }
+                _cts.Dispose();
+                _cts = null;
+                _task = null;
+            }
             Console.WriteLine("[ToxicChat] Дебафф завершён");
         }
     }

@@ -37,8 +37,8 @@ namespace GoodWin.Utils
                         _instance.SourceInitialized += (s, e) =>
                         {
                             var hwnd = new WindowInteropHelper(_instance).Handle;
-                            var exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
-                            NativeMethods.SetWindowLong(
+                            var exStyle = NativeMethods.GetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE);
+                            NativeMethods.SetWindowLongPtr(
                                 hwnd,
                                 NativeMethods.GWL_EXSTYLE,
                                 new IntPtr(exStyle.ToInt64() |
@@ -125,11 +125,23 @@ namespace GoodWin.Utils
             public const int WS_EX_TRANSPARENT = 0x20;
             public const int WS_EX_LAYERED = 0x80000;
 
-            [DllImport("user32.dll", SetLastError = true)]
-            public static extern IntPtr GetWindowLong(IntPtr hWnd, int nIndex);
+            [DllImport("user32.dll", EntryPoint = "GetWindowLongPtr", SetLastError = true)]
+            private static extern IntPtr GetWindowLongPtr64(IntPtr hWnd, int nIndex);
 
-            [DllImport("user32.dll", SetLastError = true)]
-            public static extern IntPtr SetWindowLong(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+            [DllImport("user32.dll", EntryPoint = "SetWindowLongPtr", SetLastError = true)]
+            private static extern IntPtr SetWindowLongPtr64(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+
+            [DllImport("user32.dll", EntryPoint = "GetWindowLong", SetLastError = true)]
+            private static extern IntPtr GetWindowLong32(IntPtr hWnd, int nIndex);
+
+            [DllImport("user32.dll", EntryPoint = "SetWindowLong", SetLastError = true)]
+            private static extern IntPtr SetWindowLong32(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+
+            public static IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex)
+                => IntPtr.Size == 8 ? GetWindowLongPtr64(hWnd, nIndex) : GetWindowLong32(hWnd, nIndex);
+
+            public static IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong)
+                => IntPtr.Size == 8 ? SetWindowLongPtr64(hWnd, nIndex, dwNewLong) : SetWindowLong32(hWnd, nIndex, dwNewLong);
         }
     }
 }

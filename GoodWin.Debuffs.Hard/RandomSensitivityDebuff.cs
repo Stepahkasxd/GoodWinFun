@@ -10,6 +10,7 @@ namespace GoodWin.Debuffs.Hard
     public class RandomSensitivityDebuff : DebuffBase
     {
         private CancellationTokenSource? _cts;
+        private Task? _task;
         private const int Duration = 60;
         private int _originalSpeed;
         public override string Name => "Случайная чувствительность";
@@ -19,7 +20,7 @@ namespace GoodWin.Debuffs.Hard
             var token = _cts.Token;
             _originalSpeed = GetMouseSpeed();
             var rnd = new Random();
-            Task.Run(async () =>
+            _task = Task.Run(async () =>
             {
                 var end = DateTime.UtcNow.AddSeconds(Duration);
                 while (!token.IsCancellationRequested && DateTime.UtcNow < end)
@@ -33,7 +34,14 @@ namespace GoodWin.Debuffs.Hard
         }
         public override void Remove()
         {
-            _cts?.Cancel();
+            if (_cts != null)
+            {
+                _cts.Cancel();
+                try { _task?.Wait(); } catch (AggregateException ae) { ae.Handle(e => e is TaskCanceledException); }
+                _cts.Dispose();
+                _cts = null;
+                _task = null;
+            }
             SetMouseSpeed(_originalSpeed);
             Console.WriteLine("[RandomSens] restored");
         }
