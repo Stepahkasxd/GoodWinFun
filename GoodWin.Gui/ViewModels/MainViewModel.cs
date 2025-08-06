@@ -8,6 +8,7 @@ using GoodWin.Core;
 using GoodWin.Tracker;
 using GoodWin.Gui.Services;
 using GoodWin.Utils;
+using GoodWin.Gui.Views;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -19,7 +20,6 @@ namespace GoodWin.Gui.ViewModels
         private readonly GsiListenerService _listener;
         private readonly DebuffsRegistry _registry = new();
         private readonly DebuffScheduler _scheduler = new();
-        private readonly RouletteService _roulette = new();
         private readonly DotaConfigService _configService = new();
         private readonly DispatcherTimer _timer;
         private bool _debuffActive;
@@ -209,9 +209,14 @@ namespace GoodWin.Gui.ViewModels
             OnPropertyChanged(nameof(AnyCategoryEnabled));
         }
 
-        private void TestDebuff()
+        private async void TestDebuff()
         {
-            SelectedDebuff?.Apply();
+            if (SelectedDebuff == null) return;
+            var notify = new DebuffNotificationWindow(SelectedDebuff.Name, "Описание дебаффа");
+            notify.Show();
+            await Task.Delay(3000);
+            notify.Close();
+            SelectedDebuff.Apply();
         }
 
         private void StartDota()
@@ -260,6 +265,7 @@ namespace GoodWin.Gui.ViewModels
             }
         }
 
+        private readonly Random _rand = new();
         private void OnDebuffSelectionPending()
         {
             if (_debuffActive)
@@ -290,13 +296,17 @@ namespace GoodWin.Gui.ViewModels
                 return;
             }
 
-            var events = entries.Select(e => new Event
-            {
-                Name = e.Debuff.Name,
-                Logic = () => RunDebuff(e)
-            }).ToList();
+            var entry = entries[_rand.Next(entries.Count)];
+            StartDebuff(entry);
+        }
 
-            _roulette.ShowRouletteForEvents(events, null);
+        private async void StartDebuff(ScheduledDebuffEntry entry)
+        {
+            var notify = new DebuffNotificationWindow(entry.Debuff.Name, "Описание дебаффа");
+            notify.Show();
+            await Task.Delay(3000);
+            notify.Close();
+            RunDebuff(entry);
         }
 
         private async void RunDebuff(ScheduledDebuffEntry entry)

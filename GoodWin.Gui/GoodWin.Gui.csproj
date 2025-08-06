@@ -19,9 +19,4 @@
     <ProjectReference Include="..\GoodWin.Debuffs.Hard\GoodWin.Debuffs.Hard.csproj" />
     <ProjectReference Include="..\GoodWin.Utils\GoodWin.Utils.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <!-- Exclude deprecated configurator window -->
-    <Compile Remove="Views/RouletteConfiguratorWindow.xaml.cs" />
-    <Page Remove="Views/RouletteConfiguratorWindow.xaml" />
-  </ItemGroup>
 </Project>

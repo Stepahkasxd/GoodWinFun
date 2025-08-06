@@ -25,11 +25,6 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <TextBlock Text="Первый скилл" Grid.Row="0" />
             <TextBox Text="{Binding FirstSkill}" Grid.Column="1" Grid.Row="0" />
@@ -57,16 +52,6 @@
             <TextBox Text="{Binding ChatKey}" Grid.Column="1" Grid.Row="11" />
             <TextBlock Text="Общий чат" Grid.Row="12" />
             <TextBox Text="{Binding TeamChatKey}" Grid.Column="1" Grid.Row="12" />
-            <TextBlock Text="Easy мин" Grid.Row="13" />
-            <TextBox Text="{Binding EasyMinSpins}" Grid.Column="1" Grid.Row="13" />
-            <TextBlock Text="Easy макс" Grid.Row="14" />
-            <TextBox Text="{Binding EasyMaxSpins}" Grid.Column="1" Grid.Row="14" />
-            <TextBlock Text="Medium мин" Grid.Row="15" />
-            <TextBox Text="{Binding MediumMinSpins}" Grid.Column="1" Grid.Row="15" />
-            <TextBlock Text="Medium макс" Grid.Row="16" />
-            <TextBox Text="{Binding MediumMaxSpins}" Grid.Column="1" Grid.Row="16" />
-            <TextBlock Text="Hard шанс/мин" Grid.Row="17" />
-            <TextBox Text="{Binding HardChancePerMinute}" Grid.Column="1" Grid.Row="17" />
         </Grid>
         <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
             <TextBlock Text="Путь к config-файлу" VerticalAlignment="Center" />

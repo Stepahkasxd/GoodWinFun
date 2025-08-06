@@ -24,12 +24,6 @@ namespace GoodWin.Gui.ViewModels
         [ObservableProperty] private string itemSlot5;
         [ObservableProperty] private string itemSlot6;
 
-        [ObservableProperty] private int easyMinSpins;
-        [ObservableProperty] private int easyMaxSpins;
-        [ObservableProperty] private int mediumMinSpins;
-        [ObservableProperty] private int mediumMaxSpins;
-        [ObservableProperty] private double hardChancePerMinute;
-
         public IRelayCommand SaveCommand { get; }
         public IRelayCommand ResetCommand { get; }
         public IRelayCommand BrowseConfigCommand { get; }
@@ -52,11 +46,6 @@ namespace GoodWin.Gui.ViewModels
             itemSlot4 = s.Controls.Items.Slot4;
             itemSlot5 = s.Controls.Items.Slot5;
             itemSlot6 = s.Controls.Items.Slot6;
-            easyMinSpins = s.Roulette.Easy.MinSpins;
-            easyMaxSpins = s.Roulette.Easy.MaxSpins;
-            mediumMinSpins = s.Roulette.Medium.MinSpins;
-            mediumMaxSpins = s.Roulette.Medium.MaxSpins;
-            hardChancePerMinute = s.Roulette.HardChancePerMinute;
             SaveCommand = new RelayCommand(Save);
             ResetCommand = new RelayCommand(Reset);
             BrowseConfigCommand = new RelayCommand(Browse);
@@ -79,11 +68,6 @@ namespace GoodWin.Gui.ViewModels
             s.Controls.Items.Slot5 = ItemSlot5;
             s.Controls.Items.Slot6 = ItemSlot6;
             s.Dota2.Path = ConfigPath;
-            s.Roulette.Easy.MinSpins = EasyMinSpins;
-            s.Roulette.Easy.MaxSpins = EasyMaxSpins;
-            s.Roulette.Medium.MinSpins = MediumMinSpins;
-            s.Roulette.Medium.MaxSpins = MediumMaxSpins;
-            s.Roulette.HardChancePerMinute = HardChancePerMinute;
             _service.Save();
         }
 
@@ -105,11 +89,6 @@ namespace GoodWin.Gui.ViewModels
             ItemSlot4 = s.Controls.Items.Slot4;
             ItemSlot5 = s.Controls.Items.Slot5;
             ItemSlot6 = s.Controls.Items.Slot6;
-            EasyMinSpins = s.Roulette.Easy.MinSpins;
-            EasyMaxSpins = s.Roulette.Easy.MaxSpins;
-            MediumMinSpins = s.Roulette.Medium.MinSpins;
-            MediumMaxSpins = s.Roulette.Medium.MaxSpins;
-            HardChancePerMinute = s.Roulette.HardChancePerMinute;
         }
 
         private void Browse()

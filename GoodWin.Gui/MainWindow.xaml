@@ -76,9 +76,6 @@
                 </StackPanel>
             </Grid>
         </TabItem>
-        <TabItem Header="Рулетка">
-            <views:RouletteView />
-        </TabItem>
         <TabItem Header="Настройки">
             <views:SettingsView />
         </TabItem>
