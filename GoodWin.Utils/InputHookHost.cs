@@ -27,6 +27,7 @@ namespace GoodWin.Utils
         private int _invertY;
         private int _mouseLag;
         private int _inputLag;
+        private int _blockWheel;
         private POINT _lastMousePt;
         private bool _hasLastPt;
 
@@ -82,6 +83,7 @@ namespace GoodWin.Utils
         }
 
         private const int WM_MOUSEMOVE = 0x0200;
+        private const int WM_MOUSEWHEEL = 0x020A;
         private const uint MOUSEEVENTF_MOVE = 0x0001;
         private const uint LLMHF_INJECTED = 0x00000001;
         private const uint LLMHF_LOWER_IL_INJECTED = 0x00000002;
@@ -100,30 +102,36 @@ namespace GoodWin.Utils
 
         private IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam)
         {
-            if (nCode >= 0 && wParam == (IntPtr)WM_MOUSEMOVE)
+            if (nCode >= 0)
             {
-                var data = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
-                bool injected = (data.flags & (LLMHF_INJECTED | LLMHF_LOWER_IL_INJECTED)) != 0;
+                if (_blockWheel > 0 && wParam == (IntPtr)WM_MOUSEWHEEL)
+                    return new IntPtr(1);
 
-                if (!injected)
+                if (wParam == (IntPtr)WM_MOUSEMOVE)
                 {
-                    if (!_hasLastPt)
+                    var data = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
+                    bool injected = (data.flags & (LLMHF_INJECTED | LLMHF_LOWER_IL_INJECTED)) != 0;
+
+                    if (!injected)
                     {
+                        if (!_hasLastPt)
+                        {
+                            _lastMousePt = data.pt;
+                            _hasLastPt = true;
+                        }
+                        if (_mouseLag > 0)
+                            Thread.Sleep(200);
+                        if (_invertY > 0)
+                        {
+                            int dx = data.pt.x - _lastMousePt.x;
+                            int dy = data.pt.y - _lastMousePt.y;
+                            _lastMousePt.x += dx;
+                            _lastMousePt.y -= dy;
+                            mouse_event(MOUSEEVENTF_MOVE, dx, -dy, 0, UIntPtr.Zero);
+                            return new IntPtr(1);
+                        }
                         _lastMousePt = data.pt;
-                        _hasLastPt = true;
                     }
-                    if (_mouseLag > 0)
-                        Thread.Sleep(200);
-                    if (_invertY > 0)
-                    {
-                        int dx = data.pt.x - _lastMousePt.x;
-                        int dy = data.pt.y - _lastMousePt.y;
-                        _lastMousePt.x += dx;
-                        _lastMousePt.y -= dy;
-                        mouse_event(MOUSEEVENTF_MOVE, dx, -dy, 0, UIntPtr.Zero);
-                        return new IntPtr(1);
-                    }
-                    _lastMousePt = data.pt;
                 }
             }
             return CallNextHookEx(_mouseHook, nCode, wParam, lParam);
@@ -221,6 +229,14 @@ namespace GoodWin.Utils
                 Interlocked.Increment(ref _inputLag);
             else if (Interlocked.Decrement(ref _inputLag) < 0)
                 _inputLag = 0;
+        }
+
+        public void SetCameraWheelBlocked(bool on)
+        {
+            if (on)
+                Interlocked.Increment(ref _blockWheel);
+            else if (Interlocked.Decrement(ref _blockWheel) < 0)
+                _blockWheel = 0;
         }
 
         public void Dispose()
