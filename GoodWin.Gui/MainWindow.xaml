@@ -10,6 +10,52 @@
         Title="GoodWin Debuff" Height="600" Width="800" WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <conv:BoolInvertVisibilityConverter x:Key="BoolInvertVisibilityConverter" />
+
+        <!-- Navigation TabControl style -->
+        <Style TargetType="TabControl">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabControl">
+                        <Grid Background="{StaticResource AppBackground}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="240" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Background="{StaticResource NavBackground}" VerticalAlignment="Center">
+                                <TabPanel x:Name="HeaderPanel" IsItemsHost="True" TabStripPlacement="Left" Background="{StaticResource NavBackground}" />
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{StaticResource AppBackground}" Padding="24,0,32,0">
+                                <ContentPresenter x:Name="PART_SelectedContentHost" />
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Background" Value="{StaticResource AppBackground}" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        </Style>
+
+        <Style TargetType="TabItem">
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="Bd" Background="Transparent" Padding="10" Margin="0" HorizontalAlignment="Stretch">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#333333" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
     <Window.DataContext>
         <vm:MainViewModel />
@@ -24,58 +70,67 @@
         </EventTrigger>
     </Window.Triggers>
     <TabControl>
-        <TabItem Header="Главное">
+        <TabItem Header="Главная">
+            <Grid Margin="24,24,32,24">
+                <TextBlock Text="Добро пожаловать" FontSize="20" FontWeight="Bold" />
+            </Grid>
+        </TabItem>
+        <TabItem Header="Дебафы">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <Grid Margin="20" HorizontalAlignment="Center">
+                <Grid Margin="0" HorizontalAlignment="Stretch">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="2*" />
-                        <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <StackPanel HorizontalAlignment="Center">
-                        <TextBlock Text="Категории дебаффов" FontWeight="Bold" HorizontalAlignment="Center" />
-                        <CheckBox Content="Легкий" IsChecked="{Binding EasyEnabled}" HorizontalAlignment="Center" />
-                        <CheckBox Content="Средний" IsChecked="{Binding MediumEnabled}" HorizontalAlignment="Center" />
-                        <CheckBox Content="Сложный" IsChecked="{Binding HardEnabled}" HorizontalAlignment="Center" />
-                        <ListBox ItemsSource="{Binding AllDebuffs}" Margin="0,10,0,0" IsEnabled="{Binding AnyCategoryEnabled}" HorizontalAlignment="Center" Width="300" ScrollViewer.VerticalScrollBarVisibility="Auto">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="0,5">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="{Binding Name}" Grid.Column="0" Margin="0,0,10,0" />
-                                        <Button Content="Запустить"
-                                                Command="{Binding DataContext.RunDebuffCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
-                                                CommandParameter="{Binding}" Grid.Column="1" />
-                                    </Grid>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                        <TextBlock Text="Путь к cfg" Margin="0,10,0,0" HorizontalAlignment="Center" />
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            <TextBox Width="200" Text="{Binding ConfigPath}" />
-                            <Button Content="..." Command="{Binding BrowseConfigCommand}" Margin="5,0,0,0" />
+                    <Border Style="{StaticResource Card}" Margin="24,24,8,24">
+                        <StackPanel>
+                            <TextBlock Text="Категории дебаффов" FontWeight="Bold" FontSize="16" />
+                            <CheckBox Content="Легкий" IsChecked="{Binding EasyEnabled}" />
+                            <CheckBox Content="Средний" IsChecked="{Binding MediumEnabled}" />
+                            <CheckBox Content="Сложный" IsChecked="{Binding HardEnabled}" />
+                            <ListBox ItemsSource="{Binding AllDebuffs}" Margin="0,10,0,0" IsEnabled="{Binding AnyCategoryEnabled}" Width="300" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,5">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Name}" Grid.Column="0" Margin="0,0,10,0" />
+                                            <Button Content="Запустить"
+                                                    Command="{Binding DataContext.RunDebuffCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                    CommandParameter="{Binding}" Grid.Column="1" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                            <TextBlock Text="Путь к cfg" Margin="0,10,0,0" />
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox Width="200" Text="{Binding ConfigPath}" />
+                                <Button Content="..." Command="{Binding BrowseConfigCommand}" Margin="5,0,0,0" />
+                            </StackPanel>
+                            <Button Content="Инициализировать конфиг" Command="{Binding InitConfigCommand}" Margin="0,5,0,0" />
+                            <Button Content="Инициализировать команды" Command="{Binding InitCommandsCommand}" Margin="0,5,0,0" IsEnabled="{Binding CanInitCommands}" />
                         </StackPanel>
-                        <Button Content="Инициализировать конфиг" Command="{Binding InitConfigCommand}" Margin="0,5,0,0" HorizontalAlignment="Center" />
-                        <Button Content="Инициализировать команды" Command="{Binding InitCommandsCommand}" Margin="0,5,0,0" IsEnabled="{Binding CanInitCommands}" HorizontalAlignment="Center" />
-                    </StackPanel>
-                    <StackPanel Grid.Column="1" HorizontalAlignment="Center">
-                        <TextBlock Text="Лог событий" FontWeight="Bold" HorizontalAlignment="Center" />
-                        <ListBox ItemsSource="{Binding EventLog}" Height="200" Width="250" />
-                        <TextBlock Text="{Binding GsiStatus}" Margin="0,10,0,0" HorizontalAlignment="Center" />
-                        <Button Content="Запустить Dota 2" Command="{Binding StartDotaCommand}" Visibility="{Binding IsDotaRunning,Converter={StaticResource BoolInvertVisibilityConverter}}" Margin="0,5,0,0" HorizontalAlignment="Center" />
-                        <CheckBox Content="Проверить отслеживание героя" IsChecked="{Binding IsHeroTrackingEnabled}" Margin="0,5,0,0" HorizontalAlignment="Center" />
-                    </StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource Card}" Margin="8,24,32,24">
+                        <StackPanel>
+                            <TextBlock Text="Лог событий" FontWeight="Bold" FontSize="16" />
+                            <ListBox ItemsSource="{Binding EventLog}" Height="200" />
+                            <TextBlock Text="{Binding GsiStatus}" Margin="0,10,0,0" />
+                            <Button Content="Запустить Dota 2" Command="{Binding StartDotaCommand}" Visibility="{Binding IsDotaRunning,Converter={StaticResource BoolInvertVisibilityConverter}}" Margin="0,5,0,0" />
+                            <CheckBox Content="Проверить отслеживание героя" IsChecked="{Binding IsHeroTrackingEnabled}" Margin="0,5,0,0" />
+                        </StackPanel>
+                    </Border>
                 </Grid>
             </ScrollViewer>
         </TabItem>
         <TabItem Header="Настройки">
             <views:SettingsView />
         </TabItem>
-        <TabItem Header="Отладка">
+        <TabItem Header="Дебаг">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <Grid Margin="10" HorizontalAlignment="Center">
+                <Grid Margin="24" HorizontalAlignment="Center">
                     <ListBox ItemsSource="{Binding DebugLog}" Width="400" />
                 </Grid>
             </ScrollViewer>
