@@ -25,6 +25,7 @@ namespace GoodWin.Utils
         const uint KEYEVENTF_KEYUP = 0x0002;
         const ushort VK_OEM_3 = 0xC0; // '~'
         const ushort VK_RETURN = 0x0D;
+        const ushort VK_SHIFT = 0x10;
 
         [StructLayout(LayoutKind.Sequential)]
         struct INPUT
@@ -81,8 +82,13 @@ namespace GoodWin.Utils
             // type command
             foreach (char c in command)
             {
-                ushort vk = (ushort)VkKeyScan(c);
-                Key(vk); Key(vk, true);
+                short vk = VkKeyScan(c);
+                if (vk == -1) continue;
+                ushort vkCode = (ushort)(vk & 0xFF);
+                bool shift = (vk & 0x0100) != 0;
+                if (shift) Key(VK_SHIFT);
+                Key(vkCode); Key(vkCode, true);
+                if (shift) Key(VK_SHIFT, true);
             }
             // enter
             Key(VK_RETURN); Key(VK_RETURN, true);
