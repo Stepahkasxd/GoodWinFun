@@ -12,14 +12,21 @@
 
     <!-- Общие стили -->
     <Style TargetType="{x:Type Control}">
-        <Setter Property="FontFamily" Value="Inter" />
+        <Setter Property="FontFamily" Value="Inter,Roboto" />
         <Setter Property="FontSize" Value="14" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource SecondaryTextBrush}" />
+    </Style>
+
+    <Style TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource SecondaryTextBrush}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="LineHeight" Value="20" />
+        <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
     <Style TargetType="UserControl">
-        <Setter Property="Background" Value="{StaticResource AppBackground}" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource SecondaryTextBrush}" />
     </Style>
     <Style TargetType="Window">
         <Setter Property="Background" Value="{StaticResource AppBackground}" />
@@ -40,7 +47,7 @@
 
     <Style TargetType="ListBox">
         <Setter Property="Background" Value="{StaticResource SegmentBackground}" />
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource SecondaryTextBrush}" />
     </Style>
 
     <!-- Card style for segmented blocks -->
@@ -114,5 +121,46 @@
                 </BeginStoryboard>
             </EventTrigger>
         </Style.Triggers>
+    </Style>
+
+    <!-- Separator line -->
+    <Style TargetType="Separator">
+        <Setter Property="Background" Value="{StaticResource DividerBrush}" />
+        <Setter Property="Height" Value="1" />
+        <Setter Property="Margin" Value="0,16,0,16" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Separator">
+                    <Border Background="{TemplateBinding Background}" Height="{TemplateBinding Height}" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Toggle switch style -->
+    <Style x:Key="ToggleSwitch" TargetType="CheckBox">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Grid Width="40" Height="20">
+                            <Border x:Name="SwitchBorder" Background="#555555" CornerRadius="10" />
+                            <Ellipse x:Name="SwitchKnob" Fill="#FFFFFF" Width="18" Height="18" Margin="1" HorizontalAlignment="Left" />
+                        </Grid>
+                        <ContentPresenter Margin="8,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="SwitchBorder" Property="Background" Value="{StaticResource AccentBrush}" />
+                            <Setter TargetName="SwitchKnob" Property="HorizontalAlignment" Value="Right" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="SwitchBorder" Property="Opacity" Value="0.5" />
+                            <Setter TargetName="SwitchKnob" Property="Opacity" Value="0.5" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 </ResourceDictionary>

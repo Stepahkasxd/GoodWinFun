@@ -80,25 +80,28 @@
     </Window.Triggers>
     <TabControl>
         <TabItem Header="Главная">
-            <Grid>
-                <TextBlock Text="Добро пожаловать" FontSize="20" FontWeight="Bold" Margin="0,0,0,16" />
-            </Grid>
+            <StackPanel>
+                <TextBlock Text="Главная" FontSize="20" FontWeight="Bold" Margin="0,0,0,16" Foreground="{StaticResource TextBrush}" />
+                <Border Style="{StaticResource Card}">
+                    <TextBlock Text="Добро пожаловать в GoodWinFun" />
+                </Border>
+            </StackPanel>
         </TabItem>
         <TabItem Header="Дебафы">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <TextBlock Text="Дебафы" FontSize="20" FontWeight="Bold" Margin="0,0,0,16" />
+                    <TextBlock Text="Дебафы" FontSize="20" FontWeight="Bold" Margin="0,0,0,16" Foreground="{StaticResource TextBrush}" />
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="2*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <Border Style="{StaticResource Card}" Margin="0,0,8,0">
-                            <StackPanel>
-                                <TextBlock Text="Категории дебаффов" FontWeight="Bold" FontSize="16" />
-                                <CheckBox Content="Легкий" IsChecked="{Binding EasyEnabled}" />
-                                <CheckBox Content="Средний" IsChecked="{Binding MediumEnabled}" />
-                                <CheckBox Content="Сложный" IsChecked="{Binding HardEnabled}" />
+                    <StackPanel>
+                        <TextBlock Text="Категории дебаффов" FontWeight="Bold" FontSize="16" Foreground="{StaticResource TextBrush}" />
+                        <CheckBox Content="Легкий" IsChecked="{Binding EasyEnabled}" Style="{StaticResource ToggleSwitch}" />
+                        <CheckBox Content="Средний" IsChecked="{Binding MediumEnabled}" Style="{StaticResource ToggleSwitch}" />
+                        <CheckBox Content="Сложный" IsChecked="{Binding HardEnabled}" Style="{StaticResource ToggleSwitch}" />
                                 <ListBox ItemsSource="{Binding AllDebuffs}" Margin="0,10,0,0" IsEnabled="{Binding AnyCategoryEnabled}" Width="300" ScrollViewer.VerticalScrollBarVisibility="Auto">
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
@@ -126,11 +129,11 @@
                         </Border>
                         <Border Grid.Column="1" Style="{StaticResource Card}" Margin="8,0,0,0">
                             <StackPanel>
-                                <TextBlock Text="Лог событий" FontWeight="Bold" FontSize="16" />
+                                  <TextBlock Text="Лог событий" FontWeight="Bold" FontSize="16" Foreground="{StaticResource TextBrush}" />
                                 <ListBox ItemsSource="{Binding EventLog}" Height="200" />
                                 <TextBlock Text="{Binding GsiStatus}" Margin="0,10,0,0" />
                                 <Button Content="Запустить Dota 2" Command="{Binding StartDotaCommand}" Visibility="{Binding IsDotaRunning,Converter={StaticResource BoolInvertVisibilityConverter}}" Margin="0,5,0,0" />
-                                <CheckBox Content="Проверить отслеживание героя" IsChecked="{Binding IsHeroTrackingEnabled}" Margin="0,5,0,0" />
+                                  <CheckBox Content="Проверить отслеживание героя" IsChecked="{Binding IsHeroTrackingEnabled}" Margin="0,5,0,0" Style="{StaticResource ToggleSwitch}" />
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -139,14 +142,16 @@
         </TabItem>
         <TabItem Header="Настройки">
             <StackPanel>
-                <TextBlock Text="Настройки" FontSize="20" FontWeight="Bold" Margin="0,0,0,16" />
-                <views:SettingsView />
+                <TextBlock Text="Настройки" FontSize="20" FontWeight="Bold" Margin="0,0,0,16" Foreground="{StaticResource TextBrush}" />
+                <Border Style="{StaticResource Card}">
+                    <views:SettingsView />
+                </Border>
             </StackPanel>
         </TabItem>
         <TabItem Header="Дебаг">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <TextBlock Text="Дебаг" FontSize="20" FontWeight="Bold" Margin="0,0,0,16" />
+                    <TextBlock Text="Дебаг" FontSize="20" FontWeight="Bold" Margin="0,0,0,16" Foreground="{StaticResource TextBrush}" />
                     <Border Style="{StaticResource Card}">
                         <ListBox ItemsSource="{Binding DebugLog}" Width="400" />
                     </Border>
