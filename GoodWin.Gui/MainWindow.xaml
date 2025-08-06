@@ -22,7 +22,7 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0" Background="{StaticResource NavBackground}" VerticalAlignment="Center">
-                                <TabPanel x:Name="HeaderPanel" IsItemsHost="True" TabStripPlacement="Left" Background="{StaticResource NavBackground}" />
+                                <TabPanel x:Name="HeaderPanel" IsItemsHost="True" Background="{StaticResource NavBackground}" />
                             </StackPanel>
                             <Border Grid.Column="1" Background="{StaticResource AppBackground}" Padding="24,0,32,0">
                                 <ContentPresenter x:Name="PART_SelectedContentHost" />
@@ -31,6 +31,7 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Setter Property="TabStripPlacement" Value="Left" />
             <Setter Property="Background" Value="{StaticResource AppBackground}" />
             <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
         </Style>
