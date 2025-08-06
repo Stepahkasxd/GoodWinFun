@@ -84,7 +84,11 @@ namespace GoodWin.Utils
         public Guid AddOverlay(Action<DrawingContext> draw)
         {
             var id = Guid.NewGuid();
-            Dispatcher.Invoke(() => _drawActions[id] = draw);
+            Dispatcher.Invoke(() =>
+            {
+                _drawActions[id] = draw;
+                InvalidateVisual();
+            });
             return id;
         }
 
@@ -92,13 +96,21 @@ namespace GoodWin.Utils
         /// Удалить действие рисования по идентификатору.
         /// </summary>
         public void RemoveOverlay(Guid id)
-            => Dispatcher.Invoke(() => _drawActions.Remove(id));
+            => Dispatcher.Invoke(() =>
+            {
+                _drawActions.Remove(id);
+                InvalidateVisual();
+            });
 
         /// <summary>
         /// Очистить все действия рисования.
         /// </summary>
         public void ClearOverlays()
-            => Dispatcher.Invoke(() => _drawActions.Clear());
+            => Dispatcher.Invoke(() =>
+            {
+                _drawActions.Clear();
+                InvalidateVisual();
+            });
 
         protected override void OnRender(DrawingContext drawingContext)
         {
