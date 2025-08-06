@@ -1,0 +1,56 @@
+<UserControl x:Class="GoodWin.Gui.Views.DebuffsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+            <TextBlock Text="Дебафы" FontSize="20" FontWeight="Bold" Margin="0,0,0,16" Foreground="{StaticResource TextBrush}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource Card}" Margin="0,0,8,0">
+                    <StackPanel>
+                        <TextBlock Text="Категории дебаффов" FontWeight="Bold" FontSize="16" Foreground="{StaticResource TextBrush}" />
+                        <CheckBox Content="Легкий" IsChecked="{Binding EasyEnabled}" Style="{StaticResource ToggleSwitch}" />
+                        <CheckBox Content="Средний" IsChecked="{Binding MediumEnabled}" Style="{StaticResource ToggleSwitch}" />
+                        <CheckBox Content="Сложный" IsChecked="{Binding HardEnabled}" Style="{StaticResource ToggleSwitch}" />
+                        <ListBox ItemsSource="{Binding AllDebuffs}" Margin="0,10,0,0" IsEnabled="{Binding AnyCategoryEnabled}" Width="300" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,5">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Name}" Grid.Column="0" Margin="0,0,10,0" />
+                                        <Button Content="Запустить"
+                                                Command="{Binding DataContext.RunDebuffCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                CommandParameter="{Binding}" Grid.Column="1" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <TextBlock Text="Путь к cfg" Margin="0,10,0,0" />
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox Width="200" Text="{Binding ConfigPath}" />
+                            <Button Content="..." Command="{Binding BrowseConfigCommand}" Margin="5,0,0,0" />
+                        </StackPanel>
+                        <Button Content="Инициализировать конфиг" Command="{Binding InitConfigCommand}" Margin="0,5,0,0" />
+                        <Button Content="Инициализировать команды" Command="{Binding InitCommandsCommand}" Margin="0,5,0,0" IsEnabled="{Binding CanInitCommands}" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource Card}" Margin="8,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Лог событий" FontWeight="Bold" FontSize="16" Foreground="{StaticResource TextBrush}" />
+                        <ListBox ItemsSource="{Binding EventLog}" Height="200" />
+                        <TextBlock Text="{Binding GsiStatus}" Margin="0,10,0,0" />
+                        <Button Content="Запустить Dota 2" Command="{Binding StartDotaCommand}" Visibility="{Binding IsDotaRunning,Converter={StaticResource BoolInvertVisibilityConverter}}" Margin="0,5,0,0" />
+                        <CheckBox Content="Проверить отслеживание героя" IsChecked="{Binding IsHeroTrackingEnabled}" Margin="0,5,0,0" Style="{StaticResource ToggleSwitch}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
+
