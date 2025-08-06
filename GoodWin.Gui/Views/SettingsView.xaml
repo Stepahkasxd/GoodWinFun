@@ -6,7 +6,7 @@
         <vm:SettingsViewModel />
     </UserControl.DataContext>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="10" HorizontalAlignment="Center">
+        <StackPanel HorizontalAlignment="Center">
             <Grid HorizontalAlignment="Center">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="200" />
