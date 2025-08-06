@@ -50,6 +50,11 @@ namespace GoodWin.Debuffs.Hard
                 _window.Dispatcher.Invoke(() => _window.Close());
                 _window = null;
             }
+            if (_uiThread != null)
+            {
+                _uiThread.Join();
+                _uiThread = null;
+            }
             InputHookHost.Instance.UnblockAllKeys();
         }
     }

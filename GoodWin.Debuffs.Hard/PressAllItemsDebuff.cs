@@ -1,5 +1,6 @@
 using GoodWin.Core;
 using GoodWin.Utils;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace GoodWin.Debuffs.Hard
@@ -12,7 +13,10 @@ namespace GoodWin.Debuffs.Hard
         {
             var keys = new[] { Keys.Z, Keys.X, Keys.C, Keys.V, Keys.B, Keys.N };
             foreach (var k in keys)
+            {
                 InputHookHost.Instance.SendKey((int)k);
+                Thread.Sleep(50);
+            }
         }
         public override void Remove() { }
     }
