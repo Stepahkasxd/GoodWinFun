@@ -9,6 +9,7 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GoodWin.Keybinds;
+using GoodWin.Gui.Services;
 using Microsoft.Win32;
 
 namespace GoodWin.Gui.ViewModels
@@ -121,7 +122,10 @@ namespace GoodWin.Gui.ViewModels
                 UpdateConflicts();
                 await SaveAsync();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                DebugLogService.Log($"Import keybinds failed for {dialog.FileName}: {ex.Message}");
+            }
         }
 
         private void ApplyPreset()
@@ -149,7 +153,10 @@ namespace GoodWin.Gui.ViewModels
                     var dict = JsonSerializer.Deserialize<Dictionary<string, string>>(text) ?? new();
                     Presets.Add(new PresetInfo(Path.GetFileNameWithoutExtension(file), dict));
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    DebugLogService.Log($"Failed to load preset {file}: {ex.Message}");
+                }
             }
         }
     }

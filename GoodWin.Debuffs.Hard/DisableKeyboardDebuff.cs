@@ -21,7 +21,15 @@ namespace GoodWin.Debuffs.Hard
         public override void Apply()
         {
             var path1 = Path.Combine(AppContext.BaseDirectory, "Sounds", "keyboard_off.wav");
-            try { using var player = new SoundPlayer(path1); player.Play(); } catch { }
+            try
+            {
+                using var player = new SoundPlayer(path1);
+                player.Play();
+            }
+            catch (Exception ex)
+            {
+                Log($"DisableKeyboardDebuff play off sound failed ({path1}): {ex.Message}");
+            }
             foreach (var vk in BlockedVks)
                 InputHookHost.Instance.BlockKey(vk);
             Console.WriteLine($"[DisableKB] blocked for {Duration}s");
@@ -31,8 +39,29 @@ namespace GoodWin.Debuffs.Hard
             foreach (var vk in BlockedVks)
                 InputHookHost.Instance.UnblockKey(vk);
             var path2 = Path.Combine(AppContext.BaseDirectory, "Sounds", "keyboard_on.wav");
-            try { using var player = new SoundPlayer(path2); player.Play(); } catch { }
+            try
+            {
+                using var player = new SoundPlayer(path2);
+                player.Play();
+            }
+            catch (Exception ex)
+            {
+                Log($"DisableKeyboardDebuff play on sound failed ({path2}): {ex.Message}");
+            }
             Console.WriteLine("[DisableKB] unblocked");
+        }
+        private static void Log(string message)
+        {
+            try
+            {
+                var type = Type.GetType("GoodWin.Gui.Services.DebugLogService, GoodWin.Gui");
+                var method = type?.GetMethod("Log", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                method?.Invoke(null, new object[] { message });
+            }
+            catch
+            {
+                Console.WriteLine(message);
+            }
         }
     }
 }

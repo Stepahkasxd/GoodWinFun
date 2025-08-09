@@ -41,7 +41,10 @@ public sealed class KeybindService : IKeybindService, IDisposable
             Watch(path);
             BindingsChanged?.Invoke(this, EventArgs.Empty);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Log($"Reload failed for {path}: {ex.Message}");
+        }
     }
 
     private void Watch(string path)
@@ -68,7 +71,10 @@ public sealed class KeybindService : IKeybindService, IDisposable
             _bindings = _entries.ToDictionary(e => e.Label, e => e.Key ?? "", StringComparer.OrdinalIgnoreCase);
             BindingsChanged?.Invoke(this, EventArgs.Empty);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Log($"File change processing failed for {_currentPath}: {ex.Message}");
+        }
     }
 
     public async Task SaveAsync(IEnumerable<KeybindEntry> entries)
@@ -84,11 +90,28 @@ public sealed class KeybindService : IKeybindService, IDisposable
             await File.WriteAllTextAsync(path, newText);
             Reload();
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Log($"SaveAsync failed for {_currentPath}: {ex.Message}");
+        }
     }
 
     public void Dispose()
     {
         _watcher?.Dispose();
+    }
+
+    private static void Log(string message)
+    {
+        try
+        {
+            var type = Type.GetType("GoodWin.Gui.Services.DebugLogService, GoodWin.Gui");
+            var method = type?.GetMethod("Log", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            method?.Invoke(null, new object[] { message });
+        }
+        catch
+        {
+            Console.WriteLine(message);
+        }
     }
 }
