@@ -42,7 +42,7 @@ namespace GoodWin.Utils
             foreach (var pair in _commandToButton)
             {
                 string joyName = $"joy{pair.Value}";
-                InputHookHost.Instance.SendText($"bind \\\"{joyName}\\\" \\\"{pair.Key}\\\"");
+                InputHookHost.Instance.SendText($"bind \"{joyName}\" \"{pair.Key}\"");
                 await Task.Delay(50, token);
                 InputHookHost.Instance.SendKey(EnterKey);
                 await Task.Delay(50, token);
