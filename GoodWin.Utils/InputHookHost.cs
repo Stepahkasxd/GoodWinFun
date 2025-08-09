@@ -88,9 +88,9 @@ namespace GoodWin.Utils
             })
             {
                 IsBackground = true,
-                ApartmentState = ApartmentState.STA,
                 Name = "InputHookHostThread"
             };
+            _thread.SetApartmentState(ApartmentState.STA);
             _thread.Start();
         }
 
