@@ -138,6 +138,12 @@ namespace GoodWin.Gui.ViewModels
             using var dialog = new FolderBrowserDialog { Description = "Укажите папку Dota 2" };
             if (dialog.ShowDialog() == DialogResult.OK)
             {
+                if (!_pathResolver.IsValidRoot(dialog.SelectedPath))
+                {
+                    MessageBox.Show("Указан неверный путь к Dota 2", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
                 var cfg = _pathResolver.EnsureConfigCreated(dialog.SelectedPath, _listener.Port);
                 var index = Paths.ToList().FindIndex(p => p.Name == "GSI config");
                 if (index >= 0)

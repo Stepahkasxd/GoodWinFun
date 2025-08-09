@@ -15,5 +15,12 @@ namespace GoodWin.Tracker
         /// <param name="port">Port for the local GSI HTTP listener.</param>
         /// <returns>Full path to the configuration file or null if Dota 2 was not found.</returns>
         string? EnsureConfigCreated(string? manualRoot, int port);
+
+        /// <summary>
+        /// Checks whether the supplied root path points to a valid Dota 2 installation.
+        /// </summary>
+        /// <param name="root">Path to the Dota 2 root directory.</param>
+        /// <returns><c>true</c> if the installation appears valid; otherwise, <c>false</c>.</returns>
+        bool IsValidRoot(string root);
     }
 }
