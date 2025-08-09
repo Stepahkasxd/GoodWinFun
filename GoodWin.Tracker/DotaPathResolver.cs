@@ -1,4 +1,7 @@
+using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
+using Microsoft.Win32;
 
 namespace GoodWin.Tracker
 {
@@ -28,6 +31,20 @@ namespace GoodWin.Tracker
 
         private static string? FindCfgDirectory()
         {
+            foreach (var root in EnumerateLibraries())
+            {
+                try
+                {
+                    var path = Path.Combine(root, "steamapps", "common", "dota 2 beta", "game", "dota", "cfg");
+                    if (Directory.Exists(path))
+                        return path;
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
+
             foreach (var drive in DriveInfo.GetDrives())
             {
                 try
@@ -43,6 +60,50 @@ namespace GoodWin.Tracker
                 }
             }
             return null;
+        }
+
+        private static IEnumerable<string> EnumerateLibraries()
+        {
+            try
+            {
+                using var key = Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam");
+                var root = key?.GetValue("SteamPath") as string;
+                if (string.IsNullOrWhiteSpace(root))
+                    yield break;
+
+                root = root.Replace('/', '\\');
+                yield return root;
+
+                var vdf = Path.Combine(root, "steamapps", "libraryfolders.vdf");
+                if (!File.Exists(vdf))
+                    yield break;
+
+                foreach (var lib in ParseLibraryFolders(vdf))
+                    yield return lib;
+            }
+            catch
+            {
+                // ignored
+            }
+        }
+
+        private static IEnumerable<string> ParseLibraryFolders(string vdfPath)
+        {
+            foreach (var line in File.ReadLines(vdfPath))
+            {
+                var trimmed = line.Trim();
+                if (trimmed.Length == 0)
+                    continue;
+
+                var match = Regex.Match(trimmed, "^\"(?:path|contentid|\\d+)\"\s*\"(?<p>[^\"]+)\"");
+                if (match.Success)
+                {
+                    var path = match.Groups["p"].Value
+                        .Replace("\\\\", "\\")
+                        .Replace('/', '\\');
+                    yield return path;
+                }
+            }
         }
 
         private static string BuildTemplate(int port = 3000)
