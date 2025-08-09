@@ -21,4 +21,10 @@
     <ProjectReference Include="..\GoodWin.Keybinds\GoodWin.Keybinds.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Presets/*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
