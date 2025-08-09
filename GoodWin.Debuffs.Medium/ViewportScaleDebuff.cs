@@ -9,14 +9,23 @@ namespace GoodWin.Debuffs.Medium
     {
         private const int Duration = 60;
         public override string Name => "Ужасное качество";
+
+        private readonly int _applyButton;
+        private readonly int _removeButton;
+
+        public ViewportScaleDebuff()
+        {
+            _applyButton = JoyCommandService.Instance.Register("mat_viewportscale 0.1");
+            _removeButton = JoyCommandService.Instance.Register("mat_viewportscale 1");
+        }
         public override void Apply()
         {
-            InputHookHost.Instance.Cmd("mat_viewportscale 0.1");
+            JoyCommandService.Instance.Press(_applyButton);
             Console.WriteLine($"[ViewportScale] 0.1 for {Duration}s");
         }
         public override void Remove()
         {
-            InputHookHost.Instance.Cmd("mat_viewportscale 1");
+            JoyCommandService.Instance.Press(_removeButton);
             Console.WriteLine("[ViewportScale] restored");
         }
     }

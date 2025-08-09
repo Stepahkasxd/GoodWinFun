@@ -1,8 +1,6 @@
 using GoodWin.Core;
 using GoodWin.Utils;
 using System;
-using System.IO;
-using System.Linq;
 
 namespace GoodWin.Debuffs.Easy
 {
@@ -10,40 +8,25 @@ namespace GoodWin.Debuffs.Easy
     public class Fps12Debuff : DebuffBase
     {
         private const int Duration = 60;
-        private string? _prevFps;
         public override string Name => "FPS 12";
+
+        private readonly int _applyButton;
+        private readonly int _removeButton;
+
+        public Fps12Debuff()
+        {
+            _applyButton = JoyCommandService.Instance.Register("fps_max 12");
+            _removeButton = JoyCommandService.Instance.Register("fps_max 120");
+        }
         public override void Apply()
         {
-            _prevFps = ReadCurrentFps() ?? "120";
-            InputHookHost.Instance.Cmd("fps_max 12");
+            JoyCommandService.Instance.Press(_applyButton);
             Console.WriteLine($"[FPS12] limited for {Duration}s");
         }
         public override void Remove()
         {
-            var value = _prevFps ?? "120";
-            InputHookHost.Instance.Cmd($"fps_max {value}");
+            JoyCommandService.Instance.Press(_removeButton);
             Console.WriteLine("[FPS12] restored");
-        }
-
-        private string? ReadCurrentFps()
-        {
-            try
-            {
-                var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                    "Dota 2", "cfg", "video.txt");
-                if (File.Exists(path))
-                {
-                    var line = File.ReadLines(path).FirstOrDefault(l => l.Contains("fps_max"));
-                    if (line != null)
-                    {
-                        var parts = line.Split('"');
-                        if (parts.Length >= 2)
-                            return parts[1];
-                    }
-                }
-            }
-            catch { }
-            return null;
         }
     }
 }

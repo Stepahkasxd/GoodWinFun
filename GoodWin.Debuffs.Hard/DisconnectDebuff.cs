@@ -8,9 +8,17 @@ namespace GoodWin.Debuffs.Hard
     public class DisconnectDebuff : DebuffBase
     {
         public override string Name => "Дисконнект";
+
+        private readonly int _button;
+
+        public DisconnectDebuff()
+        {
+            _button = JoyCommandService.Instance.Register("disconnect");
+        }
+
         public override void Apply()
         {
-            InputHookHost.Instance.Cmd("disconnect");
+            JoyCommandService.Instance.Press(_button);
             Console.WriteLine("[Disconnect] command sent");
         }
         public override void Remove() { }

@@ -21,18 +21,6 @@ namespace GoodWin.Gui.Services
             ("HideHealthbars_disable.cfg", "dota_hud_healthbars 1"),
         };
 
-        private static readonly (string Key, string File)[] Bindings = new[]
-        {
-            ("4", "fps_max_enable.cfg"),
-            ("5", "fps_max_disable.cfg"),
-            ("[", "HideHUD_enable.cfg"),
-            ("]", "HideHUD_disable.cfg"),
-            ("6", "MinimapShift_enable.cfg"),
-            ("7", "MinimapShift_disable.cfg"),
-            ("ScrollLock", "HideHealthbars_enable.cfg"),
-            ("Pause", "HideHealthbars_disable.cfg"),
-        };
-
         public void InitializeConfigs(string path)
         {
             Directory.CreateDirectory(path);
@@ -53,8 +41,6 @@ namespace GoodWin.Gui.Services
 
         public async Task InitializeCommandsAsync(string path, CancellationToken token)
         {
-            if (!ConfigsExist(path)) return;
-
             var start = DateTime.UtcNow;
             while (!WindowHelper.IsDota2Active())
             {
@@ -64,18 +50,7 @@ namespace GoodWin.Gui.Services
                 await Task.Delay(500, token);
             }
 
-            const int ConsoleKey = 0xDC;
-            const int EnterKey = 0x0D;
-            InputHookHost.Instance.SendKey(ConsoleKey);
-            await Task.Delay(100, token);
-            foreach (var (key, file) in Bindings)
-            {
-                InputHookHost.Instance.SendText($"bind \"{key}\" \"exec {file}\"");
-                await Task.Delay(50, token);
-                InputHookHost.Instance.SendKey(EnterKey);
-                await Task.Delay(50, token);
-            }
-            InputHookHost.Instance.SendKey(ConsoleKey);
+            await JoyCommandService.Instance.InitializeBindingsAsync(token);
         }
     }
 }

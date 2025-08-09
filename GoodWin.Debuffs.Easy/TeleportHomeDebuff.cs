@@ -8,9 +8,17 @@ namespace GoodWin.Debuffs.Easy
     public class TeleportHomeDebuff : DebuffBase
     {
         public override string Name => "ТП домой";
+
+        private readonly int _button;
+
+        public TeleportHomeDebuff()
+        {
+            _button = JoyCommandService.Instance.Register("dota_item_use item_tpscroll");
+        }
+
         public override void Apply()
         {
-            InputHookHost.Instance.Cmd("dota_item_use item_tpscroll");
+            JoyCommandService.Instance.Press(_button);
             Console.WriteLine("[TpHome] teleport home used");
         }
         public override void Remove() { }
