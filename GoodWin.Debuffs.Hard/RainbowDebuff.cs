@@ -79,8 +79,16 @@ public class RainbowDebuff : DebuffBase, IOverlayDebuff
             _hwnd = Native.CreateWindow();
 
             // Device + swap chain
-            DXGI.CreateDXGIFactory1(out IDXGIFactory2 factory).CheckError();
-            D3D11.D3D11CreateDevice(null, DriverType.Hardware, DeviceCreationFlags.BgraSupport, null, out _device).CheckError();
+            DXGI.CreateDXGIFactory1(out IDXGIFactory2? factoryTmp).CheckError();
+            var factory = factoryTmp ?? throw new InvalidOperationException("DXGI factory creation failed");
+
+            D3D11.D3D11CreateDevice(
+                adapter: null,
+                DriverType.Hardware,
+                DeviceCreationFlags.BgraSupport,
+                featureLevels: null,
+                out ID3D11Device? deviceTmp).CheckError();
+            _device = deviceTmp ?? throw new InvalidOperationException("Failed to create D3D11 device");
             _context = _device.ImmediateContext;
 
             int width = Native.GetSystemMetrics(0);
@@ -161,7 +169,7 @@ public class RainbowDebuff : DebuffBase, IOverlayDebuff
 
                     hue += 0.01f;
                     var data = new HueConstant { Hue = hue };
-                    _context.UpdateSubresource(ref data, _cbuffer);
+                    _context.UpdateSubresource(in data, _cbuffer);
 
                     _context.OMSetRenderTargets(_rtv);
                     _context.ClearRenderTargetView(_rtv, new Color4(0, 0, 0, 0));

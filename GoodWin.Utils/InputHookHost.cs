@@ -331,7 +331,13 @@ namespace GoodWin.Utils
                             _lastMousePt = data.pt;
                             _hasLastPt = true;
                         }
-                        int screenHeight = Screen.PrimaryScreen.Bounds.Height;
+                        var screen = Screen.PrimaryScreen;
+                        if (screen == null)
+                        {
+                            _lastMousePt = data.pt;
+                            return CallNextHookEx(_mouseHook, nCode, wParam, lParam);
+                        }
+                        int screenHeight = screen.Bounds.Height;
                         if (data.pt.y <= 0 || data.pt.y >= screenHeight - 1)
                         {
                             _lastMousePt = data.pt;

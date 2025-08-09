@@ -20,7 +20,7 @@ namespace GoodWin.Core
     public class DebuffScheduler
     {
         // Событие, возникающее при наступлении времени выбора нового дебаффа.
-        public event EventHandler DebuffSelectionPending;
+        public event EventHandler? DebuffSelectionPending;
 
         private readonly Random _random = new Random();
 

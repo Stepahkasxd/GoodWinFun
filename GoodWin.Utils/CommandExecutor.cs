@@ -10,7 +10,7 @@ namespace GoodWin.Utils
         static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
 
         [DllImport("user32.dll")]
-        static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+        static extern IntPtr FindWindow(string lpClassName, string? lpWindowName);
 
         [DllImport("user32.dll")]
         static extern bool SetForegroundWindow(IntPtr hWnd);
