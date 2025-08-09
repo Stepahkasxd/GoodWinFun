@@ -13,14 +13,14 @@ namespace GoodWin.Utils
         public static JoyCommandService Instance { get; } = new JoyCommandService();
 
         private readonly ViGEmClient _client;
-        private readonly Xbox360Controller _controller;
+        private readonly IXbox360Controller _controller;
         private readonly Dictionary<string, int> _commandToButton = new();
         private int _nextButton = 1;
 
         private JoyCommandService()
         {
             _client = new ViGEmClient();
-            _controller = new Xbox360Controller(_client);
+            _controller = _client.CreateXbox360Controller();
             _controller.Connect();
         }
 
@@ -53,36 +53,33 @@ namespace GoodWin.Utils
         public void Press(int buttonIndex, int holdMs = 200)
         {
             var button = GetButton(buttonIndex);
-            var report = new Xbox360Report();
-            report.SetButtons(button);
-            _controller.SendReport(report);
+            _controller.SetButtonState(button, true);
             Thread.Sleep(holdMs);
-            _controller.SendReport(new Xbox360Report());
+            _controller.SetButtonState(button, false);
         }
 
-        private static Xbox360Buttons GetButton(int index) => index switch
+        private static Xbox360Button GetButton(int index) => index switch
         {
-            1 => Xbox360Buttons.A,
-            2 => Xbox360Buttons.B,
-            3 => Xbox360Buttons.X,
-            4 => Xbox360Buttons.Y,
-            5 => Xbox360Buttons.LeftShoulder,
-            6 => Xbox360Buttons.RightShoulder,
-            7 => Xbox360Buttons.Back,
-            8 => Xbox360Buttons.Start,
-            9 => Xbox360Buttons.LeftThumb,
-            10 => Xbox360Buttons.RightThumb,
-            11 => Xbox360Buttons.Up,
-            12 => Xbox360Buttons.Down,
-            13 => Xbox360Buttons.Left,
-            14 => Xbox360Buttons.Right,
+            1 => Xbox360Button.A,
+            2 => Xbox360Button.B,
+            3 => Xbox360Button.X,
+            4 => Xbox360Button.Y,
+            5 => Xbox360Button.LeftShoulder,
+            6 => Xbox360Button.RightShoulder,
+            7 => Xbox360Button.Back,
+            8 => Xbox360Button.Start,
+            9 => Xbox360Button.LeftThumb,
+            10 => Xbox360Button.RightThumb,
+            11 => Xbox360Button.Up,
+            12 => Xbox360Button.Down,
+            13 => Xbox360Button.Left,
+            14 => Xbox360Button.Right,
             _ => throw new ArgumentOutOfRangeException(nameof(index))
         };
 
         public void Dispose()
         {
             _controller.Disconnect();
-            _controller.Dispose();
             _client.Dispose();
         }
     }
