@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -11,9 +12,14 @@ namespace GoodWin.Tracker
     /// </summary>
     public sealed class DotaPathResolver : IDotaPathResolver
     {
-        public string? EnsureConfigCreated()
+        private string? _manualRoot;
+
+        public string? EnsureConfigCreated(string? manualRoot = null)
         {
-            var cfgDir = FindCfgDirectory();
+            if (!string.IsNullOrWhiteSpace(manualRoot))
+                _manualRoot = manualRoot;
+
+            var cfgDir = _manualRoot != null ? ResolveManualCfgDirectory(_manualRoot) : FindCfgDirectory();
             if (cfgDir is null)
                 return null;
 
@@ -27,6 +33,18 @@ namespace GoodWin.Tracker
                 File.WriteAllText(cfgPath, BuildTemplate());
             }
             return cfgPath;
+        }
+
+        private static string? ResolveManualCfgDirectory(string root)
+        {
+            if (string.IsNullOrWhiteSpace(root))
+                return null;
+
+            if (root.EndsWith(Path.Combine("game", "dota", "cfg"), System.StringComparison.OrdinalIgnoreCase))
+                return Directory.Exists(root) ? root : null;
+
+            var candidate = Path.Combine(root, "game", "dota", "cfg");
+            return Directory.Exists(candidate) ? candidate : null;
         }
 
         private static string? FindCfgDirectory()
