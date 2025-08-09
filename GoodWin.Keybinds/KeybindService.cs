@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace GoodWin.Keybinds;
 
@@ -9,6 +11,7 @@ public sealed class KeybindService : IKeybindService, IDisposable
     private readonly ISteamPathService _steam;
     private FileSystemWatcher? _watcher;
     private Dictionary<string,string> _bindings = new(StringComparer.OrdinalIgnoreCase);
+    private List<KeybindEntry> _entries = new();
     private string? _currentPath;
 
     public KeybindService(ISteamPathService steam)
@@ -18,6 +21,8 @@ public sealed class KeybindService : IKeybindService, IDisposable
     }
 
     public IReadOnlyDictionary<string, string> Bindings => _bindings;
+
+    public IReadOnlyList<KeybindEntry> Entries => _entries;
 
     public string? CurrentPath => _currentPath;
 
@@ -31,8 +36,8 @@ public sealed class KeybindService : IKeybindService, IDisposable
         try
         {
             var text = File.ReadAllText(path);
-            var entries = DotaKeyvalues.Parse(text);
-            _bindings = entries.ToDictionary(e => e.Label, e => e.Key ?? "", StringComparer.OrdinalIgnoreCase);
+            _entries = DotaKeyvalues.Parse(text).ToList();
+            _bindings = _entries.ToDictionary(e => e.Label, e => e.Key ?? "", StringComparer.OrdinalIgnoreCase);
             Watch(path);
             BindingsChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -59,9 +64,25 @@ public sealed class KeybindService : IKeybindService, IDisposable
         try
         {
             var text = File.ReadAllText(_currentPath);
-            var entries = DotaKeyvalues.Parse(text);
-            _bindings = entries.ToDictionary(e => e.Label, e => e.Key ?? "", StringComparer.OrdinalIgnoreCase);
+            _entries = DotaKeyvalues.Parse(text).ToList();
+            _bindings = _entries.ToDictionary(e => e.Label, e => e.Key ?? "", StringComparer.OrdinalIgnoreCase);
             BindingsChanged?.Invoke(this, EventArgs.Empty);
+        }
+        catch { }
+    }
+
+    public async Task SaveAsync(IEnumerable<KeybindEntry> entries)
+    {
+        if (_currentPath is null) return;
+        try
+        {
+            var path = _currentPath;
+            var text = await File.ReadAllTextAsync(path);
+            var backup = path + ".bak";
+            File.Copy(path, backup, true);
+            var newText = DotaKeyvalues.Serialize(entries, text);
+            await File.WriteAllTextAsync(path, newText);
+            Reload();
         }
         catch { }
     }

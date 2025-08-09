@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 using System.Text.RegularExpressions;
 
 namespace GoodWin.Keybinds;
@@ -34,5 +36,22 @@ public static class DotaKeyvalues
             });
         }
         return result;
+    }
+
+    public static string Serialize(IEnumerable<KeybindEntry> entries, string originalText)
+    {
+        var dict = entries.ToDictionary(e => e.Label, StringComparer.OrdinalIgnoreCase);
+        var keysMatch = Regex.Match(originalText, @"""Keys""\s*\{(.*)\}\s*$", RegexOptions.Singleline | RegexOptions.Multiline);
+        if (!keysMatch.Success) return originalText;
+        var body = keysMatch.Groups[1].Value;
+        var replaced = BlockRegex.Replace(body, m =>
+        {
+            var label = m.Groups[1].Value;
+            var block = m.Groups[2].Value;
+            if (!dict.TryGetValue(label, out var entry)) return m.Value;
+            var newBlock = Regex.Replace(block, "(\"Key\"\\s*\")([^\"]*)(\")", $"$1{entry.Key}$3");
+            return m.Value.Replace(block, newBlock);
+        });
+        return originalText[..keysMatch.Groups[1].Index] + replaced + originalText[(keysMatch.Groups[1].Index + keysMatch.Groups[1].Length)..];
     }
 }
