@@ -35,6 +35,9 @@ namespace GoodWin.Gui.ViewModels
         public ObservableCollection<PlayerDisplay> Players { get; } = new();
         public ObservableCollection<PathDisplay> Paths { get; } = new();
 
+        [ObservableProperty]
+        private bool showSpecifyPathButton;
+
         [ObservableProperty] private bool easyEnabled = true;
         [ObservableProperty] private bool mediumEnabled = true;
         [ObservableProperty] private bool hardEnabled = true;
@@ -53,6 +56,7 @@ namespace GoodWin.Gui.ViewModels
         public IAsyncRelayCommand<IDebuff> RunDebuffCommand { get; }
         public IRelayCommand StartDotaCommand { get; }
         public IAsyncRelayCommand InitCommandsCommand { get; }
+        public IRelayCommand BrowseDotaPathCommand { get; }
 
         private HeroDetector? _heroDetector;
         private Guid _heroOverlayId;
@@ -84,6 +88,7 @@ namespace GoodWin.Gui.ViewModels
             var cfgPath = _pathResolver.EnsureConfigCreated();
             Paths.Add(new PathDisplay("GSI config", cfgPath ?? "не найден"));
             Paths.Add(new PathDisplay("dotakeys_personal.lst", _keybindService.CurrentPath ?? "не найден"));
+            ShowSpecifyPathButton = cfgPath is null;
             _listener.Start();
 
             _scheduler.DebuffSelectionPending += (s, e) => OnDebuffSelectionPending();
@@ -94,6 +99,7 @@ namespace GoodWin.Gui.ViewModels
             RunDebuffCommand = new AsyncRelayCommand<IDebuff>(RunManualDebuff);
             StartDotaCommand = new RelayCommand(StartDota);
             InitCommandsCommand = new AsyncRelayCommand(InitCommands);
+            BrowseDotaPathCommand = new RelayCommand(BrowseDotaPath);
 
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
             _timer.Tick += (s, e) => CheckDotaProcess();
@@ -111,6 +117,19 @@ namespace GoodWin.Gui.ViewModels
             catch (Exception ex)
             {
                 DebugLogService.Log($"InitCommands failed: {ex.Message}");
+            }
+        }
+
+        private void BrowseDotaPath()
+        {
+            using var dialog = new FolderBrowserDialog { Description = "Укажите папку Dota 2" };
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                var cfg = _pathResolver.EnsureConfigCreated(dialog.SelectedPath);
+                var index = Paths.ToList().FindIndex(p => p.Name == "GSI config");
+                if (index >= 0)
+                    Paths[index] = new PathDisplay("GSI config", cfg ?? "не найден");
+                ShowSpecifyPathButton = cfg is null;
             }
         }
 

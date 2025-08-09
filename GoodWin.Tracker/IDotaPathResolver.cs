@@ -11,7 +11,8 @@ namespace GoodWin.Tracker
         /// <summary>
         /// Ensures that the GSI configuration file for GoodWin exists.
         /// </summary>
+        /// <param name="manualRoot">Optional path to the Dota 2 installation.</param>
         /// <returns>Full path to the configuration file or null if Dota 2 was not found.</returns>
-        string? EnsureConfigCreated();
+        string? EnsureConfigCreated(string? manualRoot = null);
     }
 }
