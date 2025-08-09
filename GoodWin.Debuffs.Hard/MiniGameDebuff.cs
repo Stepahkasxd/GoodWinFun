@@ -32,9 +32,27 @@ namespace GoodWin.Debuffs.Hard
 
         public override string Name => "Мини-игра";
 
+        // виртуальные коды клавиш, которые мы блокируем (все кроме Ctrl/Alt/P для паник-комбо)
+        private static readonly int[] BlockedVks =
+            Enumerable.Range(8, 0x100 - 8)
+                      .Except(new[] { 0x50, 0xA2, 0xA3, 0xA4, 0xA5 })
+                      .ToArray();
+
+        private static void BlockKeyboard()
+        {
+            foreach (var vk in BlockedVks)
+                InputHookHost.Instance.BlockKey(vk);
+        }
+
+        private static void UnblockKeyboard()
+        {
+            foreach (var vk in BlockedVks)
+                InputHookHost.Instance.UnblockKey(vk);
+        }
+
         public override void Apply()
         {
-            InputHookHost.Instance.BlockAllKeys();
+            BlockKeyboard();
             _uiThread = new Thread(ShowWindow)
             {
                 IsBackground = true,
@@ -69,7 +87,7 @@ namespace GoodWin.Debuffs.Hard
                 ShowInTaskbar = false
             };
             _window.KeyDown += Window_KeyDown;
-            _window.Closed += (_, __) => InputHookHost.Instance.UnblockAllKeys();
+            _window.Closed += (_, __) => UnblockKeyboard();
 
             _canvas = new Canvas
             {
@@ -109,13 +127,17 @@ namespace GoodWin.Debuffs.Hard
             var ids = Enumerable.Range(0, WireCount).ToArray();
             var rightOrder = ids.OrderBy(_ => rnd.Next()).ToArray();
 
-            double spacing = height / (WireCount + 1);
-            double leftX = 40;
-            double rightX = width - 40;
+            // размеры области мини-игры (центральный блок)
+            double boardWidth = 400;
+            double boardHeight = 300;
+            double leftX = (width - boardWidth) / 2;
+            double rightX = leftX + boardWidth;
+            double top = (height - boardHeight) / 2;
+            double spacing = boardHeight / (WireCount + 1);
 
             for (int i = 0; i < WireCount; i++)
             {
-                double y = spacing * (i + 1);
+                double y = top + spacing * (i + 1);
                 var left = CreatePort(ids[i], colors[i], leftX, y);
                 left.MouseLeftButtonDown += LeftPort_MouseDown;
                 _canvas.Children.Add(left);
@@ -123,7 +145,7 @@ namespace GoodWin.Debuffs.Hard
 
             for (int i = 0; i < WireCount; i++)
             {
-                double y = spacing * (i + 1);
+                double y = top + spacing * (i + 1);
                 var right = CreatePort(rightOrder[i], colors[rightOrder[i]], rightX, y);
                 right.MouseLeftButtonUp += RightPort_MouseUp;
                 _canvas.Children.Add(right);
@@ -197,7 +219,7 @@ namespace GoodWin.Debuffs.Hard
             {
                 _timer?.Stop();
                 _timer = null;
-                InputHookHost.Instance.UnblockAllKeys();
+                UnblockKeyboard();
                 InputHookHost.Instance.Cmd("disconnect");
                 _window?.Close();
             }
@@ -268,7 +290,7 @@ namespace GoodWin.Debuffs.Hard
                 _uiThread.Join();
                 _uiThread = null;
             }
-            InputHookHost.Instance.UnblockAllKeys();
+            UnblockKeyboard();
         }
 
         private static class NativeMethods
