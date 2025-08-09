@@ -8,17 +8,25 @@ namespace GoodWin.Debuffs.Easy
     public class MinimapShiftDebuff : DebuffBase
     {
         private const int Duration = 60;
-        private const int EnableKey = 0x36; // 6
-        private const int DisableKey = 0x37; // 7
         public override string Name => "Сдвиг миникарты";
+
+        private readonly int _applyButton;
+        private readonly int _removeButton;
+
+        public MinimapShiftDebuff()
+        {
+            _applyButton = JoyCommandService.Instance.Register("dota_minimap_position_option 0");
+            _removeButton = JoyCommandService.Instance.Register("dota_minimap_position_option 1");
+        }
+
         public override void Apply()
         {
-            InputHookHost.Instance.SendKey(EnableKey);
+            JoyCommandService.Instance.Press(_applyButton);
             Console.WriteLine($"[MinimapShift] shifted for {Duration}s");
         }
         public override void Remove()
         {
-            InputHookHost.Instance.SendKey(DisableKey);
+            JoyCommandService.Instance.Press(_removeButton);
             Console.WriteLine("[MinimapShift] restored");
         }
     }

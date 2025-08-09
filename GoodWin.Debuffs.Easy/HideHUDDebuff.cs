@@ -9,18 +9,24 @@ namespace GoodWin.Debuffs.Easy
     {
         public override string Name => "Скрыть HUD";
 
-        private const int EnableKey = 0xDB; // [
-        private const int DisableKey = 0xDD; // ]
+        private readonly int _applyButton;
+        private readonly int _removeButton;
+
+        public HideHUDDebuff()
+        {
+            _applyButton = JoyCommandService.Instance.Register("dota_hud_hide_mainhud 1");
+            _removeButton = JoyCommandService.Instance.Register("dota_hud_hide_mainhud 0");
+        }
 
         public override void Apply()
         {
-            InputHookHost.Instance.SendKey(EnableKey);
+            JoyCommandService.Instance.Press(_applyButton);
             Console.WriteLine("[HideHUD] HUD скрыт");
         }
 
         public override void Remove()
         {
-            InputHookHost.Instance.SendKey(DisableKey);
+            JoyCommandService.Instance.Press(_removeButton);
             Console.WriteLine("[HideHUD] HUD возвращён");
         }
     }

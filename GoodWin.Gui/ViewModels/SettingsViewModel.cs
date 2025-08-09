@@ -15,7 +15,6 @@ namespace GoodWin.Gui.ViewModels
         [ObservableProperty] private string consoleKey;
         [ObservableProperty] private string chatKey;
         [ObservableProperty] private string teamChatKey;
-        [ObservableProperty] private string configPath;
 
         [ObservableProperty] private string itemSlot1;
         [ObservableProperty] private string itemSlot2;
@@ -26,7 +25,6 @@ namespace GoodWin.Gui.ViewModels
 
         public IRelayCommand SaveCommand { get; }
         public IRelayCommand ResetCommand { get; }
-        public IRelayCommand BrowseConfigCommand { get; }
 
         public SettingsViewModel()
         {
@@ -39,7 +37,6 @@ namespace GoodWin.Gui.ViewModels
             consoleKey = s.Controls.ConsoleKey;
             chatKey = s.Controls.ChatKey;
             teamChatKey = s.Controls.TeamChatKey;
-            configPath = s.Dota2.Path;
             itemSlot1 = s.Controls.Items.Slot1;
             itemSlot2 = s.Controls.Items.Slot2;
             itemSlot3 = s.Controls.Items.Slot3;
@@ -48,7 +45,6 @@ namespace GoodWin.Gui.ViewModels
             itemSlot6 = s.Controls.Items.Slot6;
             SaveCommand = new RelayCommand(Save);
             ResetCommand = new RelayCommand(Reset);
-            BrowseConfigCommand = new RelayCommand(Browse);
         }
 
         private void Save()
@@ -67,7 +63,6 @@ namespace GoodWin.Gui.ViewModels
             s.Controls.Items.Slot4 = ItemSlot4;
             s.Controls.Items.Slot5 = ItemSlot5;
             s.Controls.Items.Slot6 = ItemSlot6;
-            s.Dota2.Path = ConfigPath;
             _service.Save();
         }
 
@@ -82,22 +77,12 @@ namespace GoodWin.Gui.ViewModels
             ConsoleKey = s.Controls.ConsoleKey;
             ChatKey = s.Controls.ChatKey;
             TeamChatKey = s.Controls.TeamChatKey;
-            ConfigPath = s.Dota2.Path;
             ItemSlot1 = s.Controls.Items.Slot1;
             ItemSlot2 = s.Controls.Items.Slot2;
             ItemSlot3 = s.Controls.Items.Slot3;
             ItemSlot4 = s.Controls.Items.Slot4;
             ItemSlot5 = s.Controls.Items.Slot5;
             ItemSlot6 = s.Controls.Items.Slot6;
-        }
-
-        private void Browse()
-        {
-            var dlg = new Microsoft.Win32.OpenFileDialog();
-            if (dlg.ShowDialog() == true)
-            {
-                ConfigPath = dlg.FileName;
-            }
         }
     }
 }
