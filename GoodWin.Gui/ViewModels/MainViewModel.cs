@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using GoodWin.Core;
 using GoodWin.Tracker;
 using GoodWin.Gui.Services;
+using GoodWin.Keybinds;
 using GoodWin.Utils;
 using GoodWin.Gui.Views;
 using System.Threading;
@@ -25,6 +26,7 @@ namespace GoodWin.Gui.ViewModels
         private readonly DotaCommandService _commandService = new();
         private readonly UserSettingsService _settingsService = new("usersettings.json");
         private readonly DispatcherTimer _timer;
+        private readonly IKeybindService _keybindService;
         private bool _debuffActive;
 
         public ObservableCollection<string> EventLog { get; } = new();
@@ -59,6 +61,7 @@ namespace GoodWin.Gui.ViewModels
         public MainViewModel()
         {
             _pathResolver = new DotaPathResolver();
+            _keybindService = new KeybindService(new SteamPathService());
             _listener = new GsiListenerService(_pathResolver, 3000);
             _listener.OnNewGameState += gs =>
             {
@@ -171,6 +174,11 @@ namespace GoodWin.Gui.ViewModels
                             bool ok = true;
                             for (int i = 0; i < parameters.Length; i++)
                             {
+                                if (parameters[i].ParameterType == typeof(IKeybindService))
+                                {
+                                    args[i] = _keybindService;
+                                    continue;
+                                }
                                 var val = GetSettingValue(parameters[i].Name);
                                 if (val == null)
                                 {

@@ -18,5 +18,7 @@
     <ProjectReference Include="..\GoodWin.Debuffs.Medium\GoodWin.Debuffs.Medium.csproj" />
     <ProjectReference Include="..\GoodWin.Debuffs.Hard\GoodWin.Debuffs.Hard.csproj" />
     <ProjectReference Include="..\GoodWin.Utils\GoodWin.Utils.csproj" />
+    <ProjectReference Include="..\GoodWin.Keybinds\GoodWin.Keybinds.csproj" />
   </ItemGroup>
+
 </Project>
