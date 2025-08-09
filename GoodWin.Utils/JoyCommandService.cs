@@ -12,16 +12,27 @@ namespace GoodWin.Utils
     {
         public static JoyCommandService Instance { get; } = new JoyCommandService();
 
-        private readonly ViGEmClient _client;
-        private readonly IXbox360Controller _controller;
+        private readonly ViGEmClient? _client;
+        private readonly IXbox360Controller? _controller;
         private readonly Dictionary<string, int> _commandToButton = new();
         private int _nextButton = 1;
 
         private JoyCommandService()
         {
-            _client = new ViGEmClient();
-            _controller = _client.CreateXbox360Controller();
-            _controller.Connect();
+            try
+            {
+                _client = new ViGEmClient();
+                _controller = _client.CreateXbox360Controller();
+                _controller.Connect();
+            }
+            catch (Exception ex)
+            {
+                // Если драйвер ViGEm не установлен или библиотека недоступна,
+                // не прерываем загрузку дебаффов. Сервис работает в "немом" режиме.
+                Console.WriteLine($"[JoyCommandService] init failed: {ex.Message}");
+                _client = null;
+                _controller = null;
+            }
         }
 
         public int Register(string command)
@@ -52,6 +63,9 @@ namespace GoodWin.Utils
 
         public void Press(int buttonIndex, int holdMs = 200)
         {
+            if (_controller is null)
+                return;
+
             var button = GetButton(buttonIndex);
             _controller.SetButtonState(button, true);
             Thread.Sleep(holdMs);
@@ -79,8 +93,8 @@ namespace GoodWin.Utils
 
         public void Dispose()
         {
-            _controller.Disconnect();
-            _client.Dispose();
+            _controller?.Disconnect();
+            _client?.Dispose();
         }
     }
 }
