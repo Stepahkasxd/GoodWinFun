@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="InputSimulator" Version="1.0.4" />
     <PackageReference Include="System.Windows.Extensions" Version="9.0.7" />
+    <PackageReference Include="Vortice.Windows" Version="2.4.20" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,6 +26,9 @@
     <Content Include="Sounds\*.wav">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="HueShift.hlsl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
