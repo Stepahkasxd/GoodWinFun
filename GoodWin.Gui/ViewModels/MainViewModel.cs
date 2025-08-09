@@ -21,7 +21,7 @@ namespace GoodWin.Gui.ViewModels
         private readonly GsiListenerService _listener;
         private readonly DebuffsRegistry _registry = new();
         private readonly DebuffScheduler _scheduler = new();
-        private readonly DotaConfigService _configService = new();
+        private readonly DotaCommandService _commandService = new();
         private readonly UserSettingsService _settingsService = new("usersettings.json");
         private readonly DispatcherTimer _timer;
         private bool _debuffActive;
@@ -43,15 +43,8 @@ namespace GoodWin.Gui.ViewModels
 
         [ObservableProperty] private bool isDotaRunning;
 
-        [ObservableProperty] private string? configPath;
-        partial void OnConfigPathChanged(string? value) => InitConfigCommand.NotifyCanExecuteChanged();
-
-        [ObservableProperty] private bool canInitCommands;
-
         public IAsyncRelayCommand<IDebuff> RunDebuffCommand { get; }
         public IRelayCommand StartDotaCommand { get; }
-        public IRelayCommand BrowseConfigCommand { get; }
-        public IRelayCommand InitConfigCommand { get; }
         public IAsyncRelayCommand InitCommandsCommand { get; }
 
         private HeroDetector? _heroDetector;
@@ -90,9 +83,7 @@ namespace GoodWin.Gui.ViewModels
 
             RunDebuffCommand = new AsyncRelayCommand<IDebuff>(RunManualDebuff);
             StartDotaCommand = new RelayCommand(StartDota);
-            BrowseConfigCommand = new RelayCommand(BrowseConfig);
-            InitConfigCommand = new RelayCommand(InitConfigs, () => !string.IsNullOrWhiteSpace(ConfigPath));
-            InitCommandsCommand = new AsyncRelayCommand(InitCommands, () => CanInitCommands);
+            InitCommandsCommand = new AsyncRelayCommand(InitCommands);
 
             _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
             _timer.Tick += (s, e) => CheckDotaProcess();
@@ -100,32 +91,12 @@ namespace GoodWin.Gui.ViewModels
             CheckDotaProcess();
         }
 
-        private void BrowseConfig()
-        {
-            using var dialog = new FolderBrowserDialog();
-            if (dialog.ShowDialog() == DialogResult.OK)
-                ConfigPath = dialog.SelectedPath;
-        }
-
-        private void InitConfigs()
-        {
-            if (string.IsNullOrWhiteSpace(ConfigPath)) return;
-            if (!_configService.ConfigsExist(ConfigPath))
-            {
-                _configService.InitializeConfigs(ConfigPath);
-            }
-            _listener.GenerateConfig();
-            CanInitCommands = _configService.ConfigsExist(ConfigPath);
-            InitCommandsCommand.NotifyCanExecuteChanged();
-        }
-
         private async Task InitCommands()
         {
-            if (string.IsNullOrWhiteSpace(ConfigPath)) return;
             try
             {
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-                await _configService.InitializeCommandsAsync(ConfigPath, cts.Token);
+                await _commandService.InitializeCommandsAsync(cts.Token);
             }
             catch (Exception ex)
             {

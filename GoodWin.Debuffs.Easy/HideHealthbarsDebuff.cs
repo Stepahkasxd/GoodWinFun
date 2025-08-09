@@ -8,17 +8,25 @@ namespace GoodWin.Debuffs.Easy
     public class HideHealthbarsDebuff : DebuffBase
     {
         private const int Duration = 60;
-        private const int EnableKey = 0x91; // ScrollLock
-        private const int DisableKey = 0x13; // Pause
         public override string Name => "Скрыть полоски здоровья";
+
+        private readonly int _applyButton;
+        private readonly int _removeButton;
+
+        public HideHealthbarsDebuff()
+        {
+            _applyButton = JoyCommandService.Instance.Register("dota_hud_healthbars 0");
+            _removeButton = JoyCommandService.Instance.Register("dota_hud_healthbars 1");
+        }
+
         public override void Apply()
         {
-            InputHookHost.Instance.SendKey(EnableKey);
+            JoyCommandService.Instance.Press(_applyButton);
             Console.WriteLine($"[HideHP] hidden for {Duration}s");
         }
         public override void Remove()
         {
-            InputHookHost.Instance.SendKey(DisableKey);
+            JoyCommandService.Instance.Press(_removeButton);
             Console.WriteLine("[HideHP] restored");
         }
     }

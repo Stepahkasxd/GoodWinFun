@@ -35,13 +35,7 @@
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
-                        <TextBlock Text="Путь к cfg" Margin="0,10,0,0" />
-                        <StackPanel Orientation="Horizontal">
-                            <TextBox Width="200" Text="{Binding ConfigPath}" />
-                            <Button Content="..." Command="{Binding BrowseConfigCommand}" Margin="5,0,0,0" />
-                        </StackPanel>
-                        <Button Content="Инициализировать конфиг" Command="{Binding InitConfigCommand}" Margin="0,5,0,0" />
-                        <Button Content="Инициализировать команды" Command="{Binding InitCommandsCommand}" Margin="0,5,0,0" IsEnabled="{Binding CanInitCommands}" />
+                        <Button Content="Инициализировать команды" Command="{Binding InitCommandsCommand}" Margin="0,5,0,0" />
                     </StackPanel>
                 </Border>
                 <Border Grid.Column="1" Style="{StaticResource Card}" Margin="8,0,0,0">
