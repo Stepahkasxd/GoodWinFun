@@ -19,6 +19,9 @@ namespace GoodWin.Tracker
             if (!string.IsNullOrWhiteSpace(manualRoot))
                 _manualRoot = manualRoot;
 
+            if (_manualRoot != null && !IsValidRoot(_manualRoot))
+                return null;
+
             var cfgDir = _manualRoot != null ? ResolveManualCfgDirectory(_manualRoot) : FindCfgDirectory();
             if (cfgDir is null)
                 return null;
@@ -37,11 +40,23 @@ namespace GoodWin.Tracker
             if (string.IsNullOrWhiteSpace(root))
                 return null;
 
-            if (root.EndsWith(Path.Combine("game", "dota", "cfg"), System.StringComparison.OrdinalIgnoreCase))
+            var exePath = Path.Combine(root, "game", "bin", "win64", "dota2.exe");
+            if (!File.Exists(exePath))
+                return null;
+
+            if (root.EndsWith(Path.Combine("game", "dota", "cfg"), StringComparison.OrdinalIgnoreCase))
                 return Directory.Exists(root) ? root : null;
 
             var candidate = Path.Combine(root, "game", "dota", "cfg");
             return Directory.Exists(candidate) ? candidate : null;
+        }
+
+        public bool IsValidRoot(string root)
+        {
+            if (string.IsNullOrWhiteSpace(root))
+                return false;
+            var exePath = Path.Combine(root, "game", "bin", "win64", "dota2.exe");
+            return File.Exists(exePath);
         }
 
         private static string? FindCfgDirectory()
