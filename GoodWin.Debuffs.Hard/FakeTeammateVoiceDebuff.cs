@@ -11,8 +11,30 @@ namespace GoodWin.Debuffs.Hard
         public override void Apply()
         {
             var path = Path.Combine(AppContext.BaseDirectory, "Sounds", "fake_teammate.wav");
-            try { using var player = new SoundPlayer(path); player.Play(); } catch { }
+            try
+            {
+                using var player = new SoundPlayer(path);
+                player.Play();
+            }
+            catch (Exception ex)
+            {
+                Log($"FakeTeammateVoiceDebuff sound failed ({path}): {ex.Message}");
+            }
         }
         public override void Remove() { }
+
+        private static void Log(string message)
+        {
+            try
+            {
+                var type = Type.GetType("GoodWin.Gui.Services.DebugLogService, GoodWin.Gui");
+                var method = type?.GetMethod("Log", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                method?.Invoke(null, new object[] { message });
+            }
+            catch
+            {
+                Console.WriteLine(message);
+            }
+        }
     }
 }
