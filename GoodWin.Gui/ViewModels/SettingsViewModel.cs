@@ -1,12 +1,15 @@
 using System.Collections.Generic;
-
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GoodWin.Keybinds;
+using Microsoft.Win32;
 
 namespace GoodWin.Gui.ViewModels
 {
@@ -16,21 +19,34 @@ namespace GoodWin.Gui.ViewModels
         private readonly List<KeybindItemViewModel> _allItems = new();
 
         public ObservableCollection<CategoryViewModel> Categories { get; } = new();
+        public ObservableCollection<PresetInfo> Presets { get; } = new();
 
         [ObservableProperty]
         private CategoryViewModel? selectedCategory;
 
+        [ObservableProperty]
+        private PresetInfo? selectedPreset;
+
         public IAsyncRelayCommand SaveCommand { get; }
         public IRelayCommand ReloadCommand { get; }
+        public IAsyncRelayCommand ExportCommand { get; }
+        public IAsyncRelayCommand ImportCommand { get; }
+        public IRelayCommand ApplyPresetCommand { get; }
 
         public SettingsViewModel()
         {
             _keybinds = new KeybindService(new SteamPathService());
             SaveCommand = new AsyncRelayCommand(SaveAsync);
             ReloadCommand = new RelayCommand(() => _keybinds.Reload());
+            ExportCommand = new AsyncRelayCommand(ExportAsync);
+            ImportCommand = new AsyncRelayCommand(ImportAsync);
+            ApplyPresetCommand = new RelayCommand(ApplyPreset, () => SelectedPreset != null);
             Load();
+            LoadPresets();
             _keybinds.BindingsChanged += (s, e) => Load();
         }
+
+        partial void OnSelectedPresetChanged(PresetInfo? value) => ApplyPresetCommand.NotifyCanExecuteChanged();
 
         private void Load()
         {
@@ -69,6 +85,73 @@ namespace GoodWin.Gui.ViewModels
             var entries = _allItems.Select(i => { i.Model.Key = i.Key; return i.Model; }).ToList();
             await _keybinds.SaveAsync(entries);
         }
+
+        private async Task ExportAsync()
+        {
+            var dialog = new SaveFileDialog
+            {
+                Filter = "JSON files|*.json|All files|*.*",
+                FileName = "keybinds.json"
+            };
+            if (dialog.ShowDialog() != true) return;
+            var entries = _allItems.Select(i => { i.Model.Key = i.Key; return i.Model; }).ToList();
+            var json = JsonSerializer.Serialize(entries, new JsonSerializerOptions { WriteIndented = true });
+            await File.WriteAllTextAsync(dialog.FileName, json);
+        }
+
+        private async Task ImportAsync()
+        {
+            var dialog = new OpenFileDialog
+            {
+                Filter = "JSON files|*.json|All files|*.*"
+            };
+            if (dialog.ShowDialog() != true) return;
+            if (MessageBox.Show("Overwrite current keybinds?", "Import", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+                return;
+            try
+            {
+                var text = await File.ReadAllTextAsync(dialog.FileName);
+                var entries = JsonSerializer.Deserialize<List<KeybindEntry>>(text) ?? new();
+                foreach (var entry in entries)
+                {
+                    var item = _allItems.FirstOrDefault(i => string.Equals(i.Model.Label, entry.Label, StringComparison.OrdinalIgnoreCase));
+                    if (item != null)
+                        item.Key = entry.Key ?? string.Empty;
+                }
+                UpdateConflicts();
+                await SaveAsync();
+            }
+            catch { }
+        }
+
+        private void ApplyPreset()
+        {
+            if (SelectedPreset is null) return;
+            foreach (var kv in SelectedPreset.Bindings)
+            {
+                var item = _allItems.FirstOrDefault(i => string.Equals(i.Model.Label, kv.Key, StringComparison.OrdinalIgnoreCase));
+                if (item != null)
+                    item.Key = kv.Value;
+            }
+            UpdateConflicts();
+        }
+
+        private void LoadPresets()
+        {
+            Presets.Clear();
+            var dir = Path.Combine(AppContext.BaseDirectory, "Presets");
+            if (!Directory.Exists(dir)) return;
+            foreach (var file in Directory.EnumerateFiles(dir, "*.json"))
+            {
+                try
+                {
+                    var text = File.ReadAllText(file);
+                    var dict = JsonSerializer.Deserialize<Dictionary<string, string>>(text) ?? new();
+                    Presets.Add(new PresetInfo(Path.GetFileNameWithoutExtension(file), dict));
+                }
+                catch { }
+            }
+        }
     }
 
     public sealed class CategoryViewModel
@@ -100,6 +183,18 @@ namespace GoodWin.Gui.ViewModels
             Model = m;
             Category = DotaCategories.ToCategory(m.Panel);
             key = m.Key ?? string.Empty;
+        }
+    }
+
+    public sealed class PresetInfo
+    {
+        public string Name { get; }
+        public Dictionary<string, string> Bindings { get; }
+
+        public PresetInfo(string name, Dictionary<string, string> bindings)
+        {
+            Name = name;
+            Bindings = bindings;
         }
     }
 }
