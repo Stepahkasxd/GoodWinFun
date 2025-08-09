@@ -1,6 +1,8 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using Dota2GSI;
 using Dota2GSI.Nodes;
+using Dota2GSI.Nodes.Helpers;
 
 namespace GoodWin.Tracker
 {
@@ -18,9 +20,9 @@ namespace GoodWin.Tracker
         public int Port => _listener.Port;
 
         /// <summary>
-        /// Событие нового состояния игры
+        /// Событие нового состояния матча
         /// </summary>
-        public event Action<GameState>? OnNewGameState;
+        public event Action<MatchState>? OnNewMatchState;
 
         public GsiListenerService(IDotaPathResolver pathResolver, int port = 3000)
         {
@@ -31,9 +33,48 @@ namespace GoodWin.Tracker
 
         private void HandleNewGameState(GameState gs)
         {
-            // Передаём состояние дальше
-            OnNewGameState?.Invoke(gs);
+            var state = ToMatchState(gs);
+            OnNewMatchState?.Invoke(state);
         }
+
+        private static MatchState ToMatchState(GameState gs)
+        {
+            var players = new List<MatchPlayer>();
+
+            void AddPlayers(FullTeamDetails? team)
+            {
+                if (team?.Players == null) return;
+                foreach (var p in team.Players.Values)
+                {
+                    players.Add(new MatchPlayer
+                    {
+                        Name = p.Details?.Name ?? string.Empty,
+                        HeroName = p.Hero?.Name,
+                        Team = MapTeam(p.Details?.Team)
+                    });
+                }
+            }
+
+            AddPlayers(gs.RadiantTeamDetails);
+            AddPlayers(gs.DireTeamDetails);
+
+            var localTeam = MapTeam(gs.Player?.LocalPlayer.Team);
+            var time = gs.Map?.ClockTime ?? gs.Map?.GameTime ?? 0;
+
+            return new MatchState
+            {
+                Players = players,
+                Time = time,
+                LocalTeam = localTeam
+            };
+        }
+
+        private static MatchTeam MapTeam(PlayerTeam? team) => team switch
+        {
+            PlayerTeam.Radiant => MatchTeam.Radiant,
+            PlayerTeam.Dire => MatchTeam.Dire,
+            _ => MatchTeam.Unknown
+        };
 
         /// <summary>
         /// Запускает прослушивание GSI. Если выбранный порт занят,

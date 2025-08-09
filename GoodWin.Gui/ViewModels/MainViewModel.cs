@@ -32,6 +32,7 @@ namespace GoodWin.Gui.ViewModels
         public ObservableCollection<string> EventLog { get; } = new();
         public ObservableCollection<IDebuff> AllDebuffs { get; } = new();
         public ObservableCollection<string> DebugLog => DebugLogService.Entries;
+        public ObservableCollection<PlayerDisplay> Players { get; } = new();
 
         [ObservableProperty] private bool easyEnabled = true;
         [ObservableProperty] private bool mediumEnabled = true;
@@ -45,6 +46,8 @@ namespace GoodWin.Gui.ViewModels
         [ObservableProperty] private string gsiStatus = "GSI не запущен";
 
         [ObservableProperty] private bool isDotaRunning;
+
+        [ObservableProperty] private MatchTeam localTeam;
 
         public IAsyncRelayCommand<IDebuff> RunDebuffCommand { get; }
         public IRelayCommand StartDotaCommand { get; }
@@ -63,20 +66,15 @@ namespace GoodWin.Gui.ViewModels
             _pathResolver = new DotaPathResolver();
             _keybindService = new KeybindService(new SteamPathService());
             _listener = new GsiListenerService(_pathResolver, 3000);
-            _listener.OnNewGameState += gs =>
+            _listener.OnNewMatchState += state =>
             {
-                // ClockTime может отсутствовать в некоторых версиях GSI, поэтому
-                // используем GameTime в качестве резервного значения. Это гарантирует,
-                // что планировщик дебаффов продолжит работу даже при неполных данных.
-                double? time = gs.Map?.ClockTime ?? gs.Map?.GameTime;
-                if (time == null)
-                {
-                    DebugLogService.Log("GSI map data missing");
-                    return;
-                }
-                _scheduler.Update(time.Value);
+                _scheduler.Update(state.Time);
                 System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
+                    LocalTeam = state.LocalTeam;
+                    Players.Clear();
+                    foreach (var p in state.Players)
+                        Players.Add(new PlayerDisplay(p.Name, p.HeroName, p.Team == state.LocalTeam));
                     EventLog.Add(DateTime.Now.ToString("T") + " - событие");
                     while (EventLog.Count > 5) EventLog.RemoveAt(0);
                     GsiStatus = "GSI активен";
@@ -380,4 +378,6 @@ namespace GoodWin.Gui.ViewModels
             }
         }
     }
+
+    public record PlayerDisplay(string Name, string? HeroName, bool IsAlly);
 }
