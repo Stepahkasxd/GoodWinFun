@@ -113,8 +113,8 @@ public class RainbowDebuff : DebuffBase, IOverlayDebuff
             var shaderSrc = File.ReadAllText(shaderPath);
             var vsCode = ShaderCompiler.Compile(shaderSrc, "VSMain", "vs_5_0");
             var psCode = ShaderCompiler.Compile(shaderSrc, "PSMain", "ps_5_0");
-            _vs = _device.CreateVertexShader(vsCode);
-            _ps = _device.CreatePixelShader(psCode);
+            _vs = _device.CreateVertexShader(vsCode.Span);
+            _ps = _device.CreatePixelShader(psCode.Span);
 
             // Fullscreen quad vertex buffer
             var vertices = new[]
@@ -308,11 +308,15 @@ public class RainbowDebuff : DebuffBase, IOverlayDebuff
 
     private static class ShaderCompiler
     {
-        public static Blob Compile(string source, string entry, string profile)
+        public static ReadOnlyMemory<byte> Compile(string source, string entry, string profile)
         {
-            var result = Vortice.D3DCompiler.Compiler.Compile(source, entry, profile);
-            if (result.Bytecode == null) throw new InvalidOperationException(result.Message);
-            return result.Bytecode;
+            return Vortice.D3DCompiler.Compiler.Compile(
+                source,
+                "shader.hlsl",
+                entry,
+                profile,
+                ShaderFlags.None,
+                EffectFlags.None);
         }
     }
 }
