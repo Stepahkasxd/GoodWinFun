@@ -11,7 +11,7 @@
 
 
   <ItemGroup>
-    <PackageReference Include="InputSimulator" Version="1.0.4" />
+    <PackageReference Include="H.InputSimulator" Version="1.5.0" />
     <PackageReference Include="System.Windows.Extensions" Version="9.0.7" />
   </ItemGroup>
 

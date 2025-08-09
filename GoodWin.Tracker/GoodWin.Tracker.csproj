@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Dota2GSI" Version="2.1.1.8897" />
-    <PackageReference Include="InputSimulator" Version="1.0.4" />
+    <PackageReference Include="H.InputSimulator" Version="1.5.0" />
     <PackageReference Include="System.Windows.Extensions" Version="9.0.7" />
   </ItemGroup>
 
