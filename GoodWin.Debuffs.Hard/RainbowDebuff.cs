@@ -111,8 +111,8 @@ public class RainbowDebuff : DebuffBase, IOverlayDebuff
             // Compile shaders
             string shaderPath = Path.Combine(AppContext.BaseDirectory, "HueShift.hlsl");
             var shaderSrc = File.ReadAllText(shaderPath);
-            var vsCode = Compiler.Compile(shaderSrc, "VSMain", "vs_5_0");
-            var psCode = Compiler.Compile(shaderSrc, "PSMain", "ps_5_0");
+            var vsCode = ShaderCompiler.Compile(shaderSrc, "VSMain", "vs_5_0");
+            var psCode = ShaderCompiler.Compile(shaderSrc, "PSMain", "ps_5_0");
             _vs = _device.CreateVertexShader(vsCode);
             _ps = _device.CreatePixelShader(psCode);
 
@@ -130,10 +130,10 @@ public class RainbowDebuff : DebuffBase, IOverlayDebuff
 
             _cbuffer = _device.CreateBuffer(new BufferDescription
             {
-                SizeInBytes = Marshal.SizeOf<HueConstant>(),
+                ByteWidth = Marshal.SizeOf<HueConstant>(),
                 Usage = ResourceUsage.Dynamic,
                 BindFlags = BindFlags.ConstantBuffer,
-                CpuAccessFlags = CpuAccessFlags.Write
+                CPUAccessFlags = CpuAccessFlags.Write
             });
 
             _thread = new Thread(RenderLoop) { IsBackground = true };
@@ -165,13 +165,13 @@ public class RainbowDebuff : DebuffBase, IOverlayDebuff
 
                     _context.OMSetRenderTargets(_rtv);
                     _context.ClearRenderTargetView(_rtv, new Color4(0, 0, 0, 0));
-                    _context.IASetVertexBuffers(0, new VertexBufferView(_vb, stride, offset));
+                    _context.IASetVertexBuffer(0, _vb, stride, offset);
                     _context.IASetPrimitiveTopology(PrimitiveTopology.TriangleStrip);
                     _context.VSSetShader(_vs);
                     _context.PSSetShader(_ps);
-                    _context.PSSetSamplers(0, _sampler);
-                    _context.PSSetShaderResources(0, srv);
-                    _context.PSSetConstantBuffers(0, _cbuffer);
+                    _context.PSSetSamplers(0, new[] { _sampler });
+                    _context.PSSetShaderResources(0, new[] { srv });
+                    _context.PSSetConstantBuffers(0, new[] { _cbuffer });
 
                     _context.Draw(4, 0);
                     _swapChain.Present(1, PresentFlags.None);
@@ -270,13 +270,16 @@ public class RainbowDebuff : DebuffBase, IOverlayDebuff
         [DllImport("user32.dll")] private static extern bool TranslateMessage(ref MSG lpMsg);
         [DllImport("user32.dll")] private static extern IntPtr DispatchMessage(ref MSG lpMsg);
 
+        private delegate IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+        private static readonly WndProc WndProcDelegate = DefWindowProc;
+
         public static IntPtr CreateWindow()
         {
             var hInstance = GetModuleHandle(null);
             var cls = new WNDCLASSEX
             {
                 cbSize = (uint)Marshal.SizeOf<WNDCLASSEX>(),
-                lpfnWndProc = DefWindowProc,
+                lpfnWndProc = Marshal.GetFunctionPointerForDelegate(WndProcDelegate),
                 hInstance = hInstance,
                 lpszClassName = "RainbowOverlay"
             };
@@ -303,11 +306,11 @@ public class RainbowDebuff : DebuffBase, IOverlayDebuff
         }
     }
 
-    private static class Compiler
+    private static class ShaderCompiler
     {
         public static Blob Compile(string source, string entry, string profile)
         {
-            var result = D3DCompiler.D3DCompile(source, entry, profile);
+            var result = Vortice.D3DCompiler.Compiler.Compile(source, entry, profile);
             if (result.Bytecode == null) throw new InvalidOperationException(result.Message);
             return result.Bytecode;
         }
