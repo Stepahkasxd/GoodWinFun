@@ -14,7 +14,7 @@ namespace GoodWin.Tracker
     {
         private string? _manualRoot;
 
-        public string? EnsureConfigCreated(string? manualRoot = null)
+        public string? EnsureConfigCreated(string? manualRoot, int port)
         {
             if (!string.IsNullOrWhiteSpace(manualRoot))
                 _manualRoot = manualRoot;
@@ -28,10 +28,7 @@ namespace GoodWin.Tracker
                 Directory.CreateDirectory(gsiDir);
 
             var cfgPath = Path.Combine(gsiDir, "gamestate_integration_GoodWinDebuff.cfg");
-            if (!File.Exists(cfgPath))
-            {
-                File.WriteAllText(cfgPath, BuildTemplate());
-            }
+            File.WriteAllText(cfgPath, BuildTemplate(port));
             return cfgPath;
         }
 
@@ -117,7 +114,7 @@ namespace GoodWin.Tracker
             }
         }
 
-        private static string BuildTemplate(int port = 3000)
+        private static string BuildTemplate(int port)
         {
             return
                 "\"dota2cfg\"\n" +

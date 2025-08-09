@@ -82,9 +82,15 @@ namespace GoodWin.Tracker
         /// </summary>
         public bool Start(int maxAttempts = 5)
         {
-            _pathResolver.EnsureConfigCreated();
             for (int i = 0; i < maxAttempts; i++)
             {
+                var cfgPath = _pathResolver.EnsureConfigCreated(null, _listener.Port);
+                if (cfgPath is null)
+                {
+                    Console.WriteLine("[GSI] Dota 2 path not found; config not created.");
+                    return false;
+                }
+
                 if (_listener.Start())
                     return true;
 
