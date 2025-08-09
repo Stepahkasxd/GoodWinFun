@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
+using Timer = System.Threading.Timer;
 
 namespace GoodWin.Utils
 {
