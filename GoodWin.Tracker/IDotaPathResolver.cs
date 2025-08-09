@@ -1,0 +1,17 @@
+using System;
+
+namespace GoodWin.Tracker
+{
+    /// <summary>
+    /// Resolves Dota 2 installation paths and ensures that
+    /// a Game State Integration configuration file exists.
+    /// </summary>
+    public interface IDotaPathResolver
+    {
+        /// <summary>
+        /// Ensures that the GSI configuration file for GoodWin exists.
+        /// </summary>
+        /// <returns>Full path to the configuration file or null if Dota 2 was not found.</returns>
+        string? EnsureConfigCreated();
+    }
+}
