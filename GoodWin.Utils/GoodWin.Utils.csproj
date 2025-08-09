@@ -13,7 +13,8 @@
     <PackageReference Include="H.InputSimulator" Version="1.5.0" />
     <PackageReference Include="System.Windows.Extensions" Version="9.0.7" />
     <PackageReference Include="Nefarius.ViGEm.Client" Version="1.21.256" />
-        <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0" />
+    <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
     <ProjectReference Include="..\GoodWin.Core\GoodWin.Core.csproj" />
   </ItemGroup>
 
