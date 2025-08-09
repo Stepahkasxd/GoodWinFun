@@ -180,7 +180,7 @@ namespace GoodWin.Debuffs.Hard
                 Data = new PathGeometry()
             };
             _canvas.Children.Add(_currentWire);
-            _canvas.CaptureMouse();
+            Mouse.Capture(_canvas, CaptureMode.SubTree);
             e.Handled = true;
         }
 
@@ -203,11 +203,13 @@ namespace GoodWin.Debuffs.Hard
         private void Canvas_MouseLeftButtonUp(object? sender, MouseButtonEventArgs e)
         {
             if (_canvas == null) return;
-            if (_currentWire != null)
+            if (_currentWire != null && e.OriginalSource is not Ellipse)
+            {
                 _canvas.Children.Remove(_currentWire);
-            _currentWire = null;
-            _startPort = null;
-            _canvas.ReleaseMouseCapture();
+                _currentWire = null;
+                _startPort = null;
+            }
+            Mouse.Capture(null);
         }
 
         private void Timer_Tick(object? sender, EventArgs e)
@@ -258,7 +260,7 @@ namespace GoodWin.Debuffs.Hard
 
             _currentWire = null;
             _startPort = null;
-            _canvas.ReleaseMouseCapture();
+            Mouse.Capture(null);
             e.Handled = true;
         }
 
