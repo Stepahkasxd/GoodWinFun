@@ -17,7 +17,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GoodWin.Tracker\GoodWin.Tracker.csproj" />
-    <ProjectReference Include="..\GoodWin.Utils\GoodWin.Utils.csproj" />
   </ItemGroup>
 
 </Project>

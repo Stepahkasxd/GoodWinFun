@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using Timer = System.Threading.Timer;
+using GoodWin.Core;
 
 namespace GoodWin.Utils
 {
@@ -27,6 +28,8 @@ namespace GoodWin.Utils
         private readonly HashSet<byte> _blockedKeys = new();
         private readonly object _blockedKeysLock = new();
         private int _blockAllKeys;
+        private bool _ctrlDown;
+        private bool _altDown;
         private int _invertY;
         private int _mouseLag;
         private int _inputLag;
@@ -167,6 +170,26 @@ namespace GoodWin.Utils
             if (nCode >= 0)
             {
                 int vk = Marshal.ReadInt32(lParam) & 0xFF;
+                bool isDown = wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN;
+                bool isUp = wParam == (IntPtr)WM_KEYUP || wParam == (IntPtr)WM_SYSKEYUP;
+
+                if (isDown)
+                {
+                    if (vk == (int)Keys.LControlKey || vk == (int)Keys.RControlKey) _ctrlDown = true;
+                    if (vk == (int)Keys.LMenu || vk == (int)Keys.RMenu) _altDown = true;
+
+                    if (vk == (int)Keys.P && _ctrlDown && _altDown)
+                    {
+                        PanicService.Trigger();
+                        return new IntPtr(1);
+                    }
+                }
+                else if (isUp)
+                {
+                    if (vk == (int)Keys.LControlKey || vk == (int)Keys.RControlKey) _ctrlDown = false;
+                    if (vk == (int)Keys.LMenu || vk == (int)Keys.RMenu) _altDown = false;
+                }
+
                 bool blocked;
                 lock (_blockedKeysLock)
                 {
@@ -176,7 +199,6 @@ namespace GoodWin.Utils
                     return new IntPtr(1);
                 if (_inputLag > 0)
                 {
-                    bool isUp = wParam == (IntPtr)WM_KEYUP || wParam == (IntPtr)WM_SYSKEYUP;
                     long now = _lagStopwatch.ElapsedMilliseconds;
                     _keyLagQueue.Enqueue(new KeyLagEvent { Vk = vk, Up = isUp, Time = now });
                     PruneKeyQueue(now - (long)MaxBufferMs);
@@ -298,6 +320,10 @@ namespace GoodWin.Utils
 
         public void BlockKey(int vk)
         {
+            if (vk == (int)Keys.LControlKey || vk == (int)Keys.RControlKey ||
+                vk == (int)Keys.LMenu || vk == (int)Keys.RMenu ||
+                vk == (int)Keys.P)
+                return;
             lock (_blockedKeysLock)
                 _blockedKeys.Add((byte)vk);
         }
