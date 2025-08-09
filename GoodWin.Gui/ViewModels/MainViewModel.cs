@@ -19,6 +19,7 @@ namespace GoodWin.Gui.ViewModels
     public partial class MainViewModel : ObservableObject
     {
         private readonly GsiListenerService _listener;
+        private readonly IDotaPathResolver _pathResolver;
         private readonly DebuffsRegistry _registry = new();
         private readonly DebuffScheduler _scheduler = new();
         private readonly DotaCommandService _commandService = new();
@@ -57,7 +58,8 @@ namespace GoodWin.Gui.ViewModels
 
         public MainViewModel()
         {
-            _listener = new GsiListenerService(3000);
+            _pathResolver = new DotaPathResolver();
+            _listener = new GsiListenerService(_pathResolver, 3000);
             _listener.OnNewGameState += gs =>
             {
                 // ClockTime может отсутствовать в некоторых версиях GSI, поэтому
@@ -77,6 +79,7 @@ namespace GoodWin.Gui.ViewModels
                     GsiStatus = "GSI активен";
                 });
             };
+            _pathResolver.EnsureConfigCreated();
             _listener.Start();
 
             _scheduler.DebuffSelectionPending += (s, e) => OnDebuffSelectionPending();

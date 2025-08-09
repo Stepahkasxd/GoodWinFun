@@ -9,6 +9,7 @@ namespace GoodWin.Tracker
     /// </summary>
     public class GsiListenerService : IDisposable
     {
+        private readonly IDotaPathResolver _pathResolver;
         private GameStateListener _listener;
 
         /// <summary>
@@ -21,8 +22,9 @@ namespace GoodWin.Tracker
         /// </summary>
         public event Action<GameState>? OnNewGameState;
 
-        public GsiListenerService(int port = 3000)
+        public GsiListenerService(IDotaPathResolver pathResolver, int port = 3000)
         {
+            _pathResolver = pathResolver;
             _listener = new GameStateListener(port);
             _listener.NewGameState += HandleNewGameState;
         }
@@ -33,15 +35,13 @@ namespace GoodWin.Tracker
             OnNewGameState?.Invoke(gs);
         }
 
-        public bool GenerateConfig(string configName = "GoodWinDebuff") =>
-            _listener.GenerateGSIConfigFile(configName);
-
         /// <summary>
         /// Запускает прослушивание GSI. Если выбранный порт занят,
         /// пытается увеличить его до 5 раз.
         /// </summary>
         public bool Start(int maxAttempts = 5)
         {
+            _pathResolver.EnsureConfigCreated();
             for (int i = 0; i < maxAttempts; i++)
             {
                 if (_listener.Start())
