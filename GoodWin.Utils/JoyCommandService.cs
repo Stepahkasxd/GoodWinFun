@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.ServiceProcess;
 using System.Threading;
 using System.Threading.Tasks;
 using Nefarius.ViGEm.Client;
 using Nefarius.ViGEm.Client.Targets;
 using Nefarius.ViGEm.Client.Targets.Xbox360;
+using Nefarius.ViGEm.Client.Exceptions;
 
 namespace GoodWin.Utils
 {
@@ -24,10 +27,23 @@ namespace GoodWin.Utils
         {
             try
             {
+                if (!OperatingSystem.IsWindows() || !IsVigemBusInstalled())
+                {
+                    Log("[JoyCommandService] ViGEmBus not found; joystick emulation disabled.");
+                    return;
+                }
+
                 _client = new ViGEmClient();
                 _controller = _client.CreateXbox360Controller();
                 _controller.Connect();
                 IsOperational = true;
+            }
+            catch (VigemBusNotFoundException)
+            {
+                _client = null;
+                _controller = null;
+                IsOperational = false;
+                Log("[JoyCommandService] ViGEmBus not found; joystick emulation disabled.");
             }
             catch (Exception ex)
             {
@@ -37,6 +53,19 @@ namespace GoodWin.Utils
                 _controller = null;
                 IsOperational = false;
                 Log($"[JoyCommandService] init failed: {ex.Message}");
+            }
+        }
+
+        private static bool IsVigemBusInstalled()
+        {
+            try
+            {
+                return ServiceController.GetServices()
+                    .Any(s => s.ServiceName.Equals("ViGEmBus", StringComparison.OrdinalIgnoreCase));
+            }
+            catch
+            {
+                return false;
             }
         }
 
