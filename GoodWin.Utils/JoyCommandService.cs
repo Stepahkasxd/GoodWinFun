@@ -15,7 +15,10 @@ namespace GoodWin.Utils
         private readonly ViGEmClient? _client;
         private readonly IXbox360Controller? _controller;
         private readonly Dictionary<string, int> _commandToButton = new();
+        private readonly Dictionary<int, string> _buttonToCommand = new();
         private int _nextButton = 1;
+
+        public bool IsOperational { get; private set; }
 
         private JoyCommandService()
         {
@@ -24,14 +27,16 @@ namespace GoodWin.Utils
                 _client = new ViGEmClient();
                 _controller = _client.CreateXbox360Controller();
                 _controller.Connect();
+                IsOperational = true;
             }
             catch (Exception ex)
             {
                 // Если драйвер ViGEm не установлен или библиотека недоступна,
                 // не прерываем загрузку дебаффов. Сервис работает в "немом" режиме.
-                Console.WriteLine($"[JoyCommandService] init failed: {ex.Message}");
                 _client = null;
                 _controller = null;
+                IsOperational = false;
+                Log($"[JoyCommandService] init failed: {ex.Message}");
             }
         }
 
@@ -41,11 +46,15 @@ namespace GoodWin.Utils
                 return btn;
             btn = _nextButton++;
             _commandToButton[command] = btn;
+            _buttonToCommand[btn] = command;
             return btn;
         }
 
         public async Task InitializeBindingsAsync(CancellationToken token)
         {
+            if (_controller is null)
+                return;
+
             const int ConsoleKey = 0xDC;
             const int EnterKey = 0x0D;
             InputHookHost.Instance.SendKey(ConsoleKey);
@@ -63,13 +72,49 @@ namespace GoodWin.Utils
 
         public void Press(int buttonIndex, int holdMs = 200)
         {
-            if (_controller is null)
-                return;
+            if (_controller is not null)
+            {
+                var button = GetButton(buttonIndex);
+                _controller.SetButtonState(button, true);
+                Thread.Sleep(holdMs);
+                _controller.SetButtonState(button, false);
+            }
+            else if (_buttonToCommand.TryGetValue(buttonIndex, out var cmd))
+            {
+                InputHookHost.Instance.Cmd(cmd);
+            }
+        }
 
-            var button = GetButton(buttonIndex);
-            _controller.SetButtonState(button, true);
-            Thread.Sleep(holdMs);
-            _controller.SetButtonState(button, false);
+        public bool SelfTest()
+        {
+            if (!IsOperational)
+                return false;
+
+            var idx = Register("echo GoodWin");
+            try
+            {
+                Press(idx, 10);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log($"[JoyCommandService] self-test failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        private static void Log(string message)
+        {
+            try
+            {
+                var type = Type.GetType("GoodWin.Gui.Services.DebugLogService, GoodWin.Gui");
+                var method = type?.GetMethod("Log", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                method?.Invoke(null, new object[] { message });
+            }
+            catch
+            {
+                Console.WriteLine(message);
+            }
         }
 
         private static Xbox360Button GetButton(int index) => index switch
