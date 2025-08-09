@@ -60,13 +60,16 @@ namespace GoodWin.Gui.ViewModels
             _listener = new GsiListenerService(3000);
             _listener.OnNewGameState += gs =>
             {
-                var clock = gs.Map?.ClockTime;
-                if (clock == null)
+                // ClockTime может отсутствовать в некоторых версиях GSI, поэтому
+                // используем GameTime в качестве резервного значения. Это гарантирует,
+                // что планировщик дебаффов продолжит работу даже при неполных данных.
+                double? time = gs.Map?.ClockTime ?? gs.Map?.GameTime;
+                if (time == null)
                 {
                     DebugLogService.Log("GSI map data missing");
                     return;
                 }
-                _scheduler.Update(clock.Value);
+                _scheduler.Update(time.Value);
                 System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
                     EventLog.Add(DateTime.Now.ToString("T") + " - событие");
