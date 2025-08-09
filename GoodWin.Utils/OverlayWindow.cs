@@ -52,10 +52,10 @@ namespace GoodWin.Utils
                     })
                     {
                         IsBackground = true,
-                        Name = "OverlayWindowThread",
-                        ApartmentState = ApartmentState.STA
+                        Name = "OverlayWindowThread"
                     };
 
+                    thread.SetApartmentState(ApartmentState.STA);
                     thread.Start();
                     ready.WaitOne();
 
