@@ -85,7 +85,7 @@ namespace GoodWin.Gui.ViewModels
                     GsiStatus = "GSI активен";
                 });
             };
-            var cfgPath = _pathResolver.EnsureConfigCreated();
+            var cfgPath = _pathResolver.EnsureConfigCreated(null, _listener.Port);
             Paths.Add(new PathDisplay("GSI config", cfgPath ?? "не найден"));
             Paths.Add(new PathDisplay("dotakeys_personal.lst", _keybindService.CurrentPath ?? "не найден"));
             ShowSpecifyPathButton = cfgPath is null;
@@ -125,7 +125,7 @@ namespace GoodWin.Gui.ViewModels
             using var dialog = new FolderBrowserDialog { Description = "Укажите папку Dota 2" };
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                var cfg = _pathResolver.EnsureConfigCreated(dialog.SelectedPath);
+                var cfg = _pathResolver.EnsureConfigCreated(dialog.SelectedPath, _listener.Port);
                 var index = Paths.ToList().FindIndex(p => p.Name == "GSI config");
                 if (index >= 0)
                     Paths[index] = new PathDisplay("GSI config", cfg ?? "не найден");
