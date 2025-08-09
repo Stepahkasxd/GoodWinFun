@@ -1,6 +1,5 @@
 ﻿using GoodWin.Core;
 using WindowsInput;
-using WindowsInput.Native;
 
 namespace GoodWin.Debuffs.Medium
 {
