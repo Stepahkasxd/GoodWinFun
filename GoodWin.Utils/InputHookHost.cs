@@ -128,7 +128,19 @@ namespace GoodWin.Utils
             while (_keyLagQueue.TryPeek(out var ke) && ke.Time <= target)
             {
                 _keyLagQueue.TryDequeue(out ke);
-                keybd_event((byte)ke.Vk, 0, ke.Up ? KEYEVENTF_KEYUP : 0, 0);
+                var input = new INPUT
+                {
+                    type = INPUT_KEYBOARD,
+                    U = new InputUnion
+                    {
+                        ki = new KEYBDINPUT
+                        {
+                            wVk = (ushort)ke.Vk,
+                            dwFlags = ke.Up ? KEYEVENTF_KEYUP : 0,
+                        }
+                    }
+                };
+                SendInput(1, new[] { input }, Marshal.SizeOf<INPUT>());
             }
 
             while (_mouseLagQueue.TryPeek(out var me) && me.Time <= target)
@@ -230,6 +242,50 @@ namespace GoodWin.Utils
             public IntPtr dwExtraInfo;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        private struct INPUT
+        {
+            public uint type;
+            public InputUnion U;
+        }
+
+        [StructLayout(LayoutKind.Explicit)]
+        private struct InputUnion
+        {
+            [FieldOffset(0)] public MOUSEINPUT mi;
+            [FieldOffset(0)] public KEYBDINPUT ki;
+            [FieldOffset(0)] public HARDWAREINPUT hi;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MOUSEINPUT
+        {
+            public int dx;
+            public int dy;
+            public uint mouseData;
+            public uint dwFlags;
+            public uint time;
+            public IntPtr dwExtraInfo;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct KEYBDINPUT
+        {
+            public ushort wVk;
+            public ushort wScan;
+            public uint dwFlags;
+            public uint time;
+            public IntPtr dwExtraInfo;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct HARDWAREINPUT
+        {
+            public uint uMsg;
+            public ushort wParamL;
+            public ushort wParamH;
+        }
+
         private IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam)
         {
             if (nCode >= 0)
@@ -279,16 +335,32 @@ namespace GoodWin.Utils
             return CallNextHookEx(_mouseHook, nCode, wParam, lParam);
         }
 
-        // Эмуляция нажатия/отпускания клавиши
-        [DllImport("user32.dll")]
-        private static extern void keybd_event(byte bVk, byte bScan, int dwFlags, int dwExtraInfo);
-        private const int KEYEVENTF_KEYUP = 0x0002;
-        private const int KEYEVENTF_UNICODE = 0x0004;
+        private const uint INPUT_KEYBOARD = 1;
+        private const uint KEYEVENTF_KEYUP = 0x0002;
+        private const uint KEYEVENTF_UNICODE = 0x0004;
 
         public void SendKey(int vk)
         {
-            keybd_event((byte)vk, 0, 0, 0);
-            keybd_event((byte)vk, 0, KEYEVENTF_KEYUP, 0);
+            var inputs = new[]
+            {
+                new INPUT
+                {
+                    type = INPUT_KEYBOARD,
+                    U = new InputUnion
+                    {
+                        ki = new KEYBDINPUT { wVk = (ushort)vk }
+                    }
+                },
+                new INPUT
+                {
+                    type = INPUT_KEYBOARD,
+                    U = new InputUnion
+                    {
+                        ki = new KEYBDINPUT { wVk = (ushort)vk, dwFlags = KEYEVENTF_KEYUP }
+                    }
+                }
+            };
+            SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
         }
 
         // Unicode-ввод символов без учёта раскладки
@@ -296,8 +368,26 @@ namespace GoodWin.Utils
         {
             foreach (char c in text)
             {
-                keybd_event(0, (byte)c, KEYEVENTF_UNICODE, 0);
-                keybd_event(0, (byte)c, KEYEVENTF_UNICODE | KEYEVENTF_KEYUP, 0);
+                var inputs = new[]
+                {
+                    new INPUT
+                    {
+                        type = INPUT_KEYBOARD,
+                        U = new InputUnion
+                        {
+                            ki = new KEYBDINPUT { wScan = c, dwFlags = KEYEVENTF_UNICODE }
+                        }
+                    },
+                    new INPUT
+                    {
+                        type = INPUT_KEYBOARD,
+                        U = new InputUnion
+                        {
+                            ki = new KEYBDINPUT { wScan = c, dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP }
+                        }
+                    }
+                };
+                SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
                 Thread.Sleep(1);
             }
         }
@@ -422,5 +512,7 @@ namespace GoodWin.Utils
         [DllImport("user32.dll")] private static extern void mouse_event(uint dwFlags, int dx, int dy, uint dwData, UIntPtr dwExtraInfo);
         [DllImport("user32.dll")] private static extern bool BlockInput(bool fBlockIt);
         [DllImport("user32.dll")] private static extern bool GetCursorPos(out POINT lpPoint);
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
     }
 }
