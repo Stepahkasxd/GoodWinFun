@@ -33,6 +33,7 @@ namespace GoodWin.Gui.ViewModels
         public ObservableCollection<IDebuff> AllDebuffs { get; } = new();
         public ObservableCollection<string> DebugLog => DebugLogService.Entries;
         public ObservableCollection<PlayerDisplay> Players { get; } = new();
+        public ObservableCollection<PathDisplay> Paths { get; } = new();
 
         [ObservableProperty] private bool easyEnabled = true;
         [ObservableProperty] private bool mediumEnabled = true;
@@ -80,7 +81,9 @@ namespace GoodWin.Gui.ViewModels
                     GsiStatus = "GSI активен";
                 });
             };
-            _pathResolver.EnsureConfigCreated();
+            var cfgPath = _pathResolver.EnsureConfigCreated();
+            Paths.Add(new PathDisplay("GSI config", cfgPath ?? "не найден"));
+            Paths.Add(new PathDisplay("dotakeys_personal.lst", _keybindService.CurrentPath ?? "не найден"));
             _listener.Start();
 
             _scheduler.DebuffSelectionPending += (s, e) => OnDebuffSelectionPending();
@@ -380,4 +383,5 @@ namespace GoodWin.Gui.ViewModels
     }
 
     public record PlayerDisplay(string Name, string? HeroName, bool IsAlly);
+    public record PathDisplay(string Name, string Path);
 }
