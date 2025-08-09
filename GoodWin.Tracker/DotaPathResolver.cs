@@ -82,27 +82,20 @@ namespace GoodWin.Tracker
 
         private static IEnumerable<string> EnumerateLibraries()
         {
-            try
-            {
-                using var key = Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam");
-                var root = key?.GetValue("SteamPath") as string;
-                if (string.IsNullOrWhiteSpace(root))
-                    yield break;
+            using var key = Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam");
+            var root = key?.GetValue("SteamPath") as string;
+            if (string.IsNullOrWhiteSpace(root))
+                yield break;
 
-                root = root.Replace('/', '\\');
-                yield return root;
+            root = root.Replace('/', '\\');
+            yield return root;
 
-                var vdf = Path.Combine(root, "steamapps", "libraryfolders.vdf");
-                if (!File.Exists(vdf))
-                    yield break;
+            var vdf = Path.Combine(root, "steamapps", "libraryfolders.vdf");
+            if (!File.Exists(vdf))
+                yield break;
 
-                foreach (var lib in ParseLibraryFolders(vdf))
-                    yield return lib;
-            }
-            catch
-            {
-                // ignored
-            }
+            foreach (var lib in ParseLibraryFolders(vdf))
+                yield return lib;
         }
 
         private static IEnumerable<string> ParseLibraryFolders(string vdfPath)
@@ -113,7 +106,7 @@ namespace GoodWin.Tracker
                 if (trimmed.Length == 0)
                     continue;
 
-                var match = Regex.Match(trimmed, "^\"(?:path|contentid|\\d+)\"\s*\"(?<p>[^\"]+)\"");
+                var match = Regex.Match(trimmed, @"^""(?:path|contentid|\d+)""\s*""(?<p>[^""]+)""");
                 if (match.Success)
                 {
                     var path = match.Groups["p"].Value
