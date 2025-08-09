@@ -52,6 +52,8 @@ namespace GoodWin.Gui.ViewModels
         private void Load()
         {
             Categories.Clear();
+            foreach (var item in _allItems)
+                item.PropertyChanged -= Item_PropertyChanged;
             _allItems.Clear();
             foreach (var item in _keybinds.Entries.Select(e => new KeybindItemViewModel(e)))
             {
