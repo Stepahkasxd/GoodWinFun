@@ -8,14 +8,23 @@ namespace GoodWin.Debuffs.Easy
     {
         public override string Name => "Отзеркалить карту";
 
+        private readonly int _applyButton;
+        private readonly int _removeButton;
+
+        public MirrorMapDebuff()
+        {
+            _applyButton = JoyCommandService.Instance.Register("dota_minimap_position_option 1");
+            _removeButton = JoyCommandService.Instance.Register("dota_minimap_position_option 0");
+        }
+
         public override void Apply()
         {
-            CommandExecutor.ExecuteCommand("dota_minimap_position_option 1");
+            JoyCommandService.Instance.Press(_applyButton);
         }
 
         public override void Remove()
         {
-            CommandExecutor.ExecuteCommand("dota_minimap_position_option 0");
+            JoyCommandService.Instance.Press(_removeButton);
         }
     }
 }

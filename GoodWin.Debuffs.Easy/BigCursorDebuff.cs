@@ -9,16 +9,24 @@ namespace GoodWin.Debuffs.Easy
     {
         private const int Duration = 60;
         public override string Name => "Большой курсор";
+
+        private readonly int _applyButton;
+        private readonly int _removeButton;
+
+        public BigCursorDebuff()
+        {
+            _applyButton = JoyCommandService.Instance.Register("cl_auto_cursor_scale 0; cl_cursor_scale 30");
+            _removeButton = JoyCommandService.Instance.Register("cl_cursor_scale 1; cl_auto_cursor_scale 1");
+        }
+
         public override void Apply()
         {
-            InputHookHost.Instance.Cmd("cl_auto_cursor_scale 0");
-            InputHookHost.Instance.Cmd("cl_cursor_scale 30");
+            JoyCommandService.Instance.Press(_applyButton);
             Console.WriteLine($"[BigCursor] applied for {Duration}s");
         }
         public override void Remove()
         {
-            InputHookHost.Instance.Cmd("cl_cursor_scale 1");
-            InputHookHost.Instance.Cmd("cl_auto_cursor_scale 1");
+            JoyCommandService.Instance.Press(_removeButton);
             Console.WriteLine("[BigCursor] restored");
         }
     }

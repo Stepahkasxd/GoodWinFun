@@ -9,14 +9,23 @@ namespace GoodWin.Debuffs.Medium
     {
         private const int Duration = 60;
         public override string Name => "Инверсия камеры";
+
+        private readonly int _applyButton;
+        private readonly int _removeButton;
+
+        public CameraReverseDebuff()
+        {
+            _applyButton = JoyCommandService.Instance.Register("dota_camera_reverse 1");
+            _removeButton = JoyCommandService.Instance.Register("dota_camera_reverse 0");
+        }
         public override void Apply()
         {
-            InputHookHost.Instance.Cmd("dota_camera_reverse 1");
+            JoyCommandService.Instance.Press(_applyButton);
             Console.WriteLine($"[CameraReverse] enabled for {Duration}s");
         }
         public override void Remove()
         {
-            InputHookHost.Instance.Cmd("dota_camera_reverse 0");
+            JoyCommandService.Instance.Press(_removeButton);
             Console.WriteLine("[CameraReverse] disabled");
         }
     }

@@ -8,10 +8,18 @@ namespace GoodWin.Debuffs.Easy
     public class BuyTeleportsDebuff : DebuffBase
     {
         public override string Name => "Купить 5 ТП";
+
+        private readonly int _button;
+
+        public BuyTeleportsDebuff()
+        {
+            _button = JoyCommandService.Instance.Register("dota_item_purchase item_tpscroll");
+        }
+
         public override void Apply()
         {
             for (int i = 0; i < 5; i++)
-                InputHookHost.Instance.Cmd("dota_item_purchase item_tpscroll");
+                JoyCommandService.Instance.Press(_button);
             Console.WriteLine("[BuyTP] purchased 5 TP");
         }
         public override void Remove() { }
