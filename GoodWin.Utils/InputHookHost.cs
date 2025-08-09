@@ -181,40 +181,45 @@ namespace GoodWin.Utils
         {
             if (nCode >= 0)
             {
-                int vk = Marshal.ReadInt32(lParam) & 0xFF;
-                bool isDown = wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN;
-                bool isUp = wParam == (IntPtr)WM_KEYUP || wParam == (IntPtr)WM_SYSKEYUP;
-
-                if (isDown)
+                var data = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam);
+                bool injected = (data.flags & (LLKHF_INJECTED | LLKHF_LOWER_IL_INJECTED)) != 0;
+                if (!injected)
                 {
-                    if (vk == (int)Keys.LControlKey || vk == (int)Keys.RControlKey) _ctrlDown = true;
-                    if (vk == (int)Keys.LMenu || vk == (int)Keys.RMenu) _altDown = true;
+                    int vk = (int)data.vkCode & 0xFF;
+                    bool isDown = wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN;
+                    bool isUp = wParam == (IntPtr)WM_KEYUP || wParam == (IntPtr)WM_SYSKEYUP;
 
-                    if (vk == (int)Keys.P && _ctrlDown && _altDown)
+                    if (isDown)
                     {
-                        PanicService.Trigger();
+                        if (vk == (int)Keys.LControlKey || vk == (int)Keys.RControlKey) _ctrlDown = true;
+                        if (vk == (int)Keys.LMenu || vk == (int)Keys.RMenu) _altDown = true;
+
+                        if (vk == (int)Keys.P && _ctrlDown && _altDown)
+                        {
+                            PanicService.Trigger();
+                            return new IntPtr(1);
+                        }
+                    }
+                    else if (isUp)
+                    {
+                        if (vk == (int)Keys.LControlKey || vk == (int)Keys.RControlKey) _ctrlDown = false;
+                        if (vk == (int)Keys.LMenu || vk == (int)Keys.RMenu) _altDown = false;
+                    }
+
+                    bool blocked;
+                    lock (_blockedKeysLock)
+                    {
+                        blocked = _blockedKeys.Contains((byte)vk);
+                    }
+                    if (_blockAllKeys > 0 || blocked)
+                        return new IntPtr(1);
+                    if (_inputLag > 0)
+                    {
+                        long now = _lagStopwatch.ElapsedMilliseconds;
+                        _keyLagQueue.Enqueue(new KeyLagEvent { Vk = vk, Up = isUp, Time = now });
+                        PruneKeyQueue(now - (long)MaxBufferMs);
                         return new IntPtr(1);
                     }
-                }
-                else if (isUp)
-                {
-                    if (vk == (int)Keys.LControlKey || vk == (int)Keys.RControlKey) _ctrlDown = false;
-                    if (vk == (int)Keys.LMenu || vk == (int)Keys.RMenu) _altDown = false;
-                }
-
-                bool blocked;
-                lock (_blockedKeysLock)
-                {
-                    blocked = _blockedKeys.Contains((byte)vk);
-                }
-                if (_blockAllKeys > 0 || blocked)
-                    return new IntPtr(1);
-                if (_inputLag > 0)
-                {
-                    long now = _lagStopwatch.ElapsedMilliseconds;
-                    _keyLagQueue.Enqueue(new KeyLagEvent { Vk = vk, Up = isUp, Time = now });
-                    PruneKeyQueue(now - (long)MaxBufferMs);
-                    return new IntPtr(1);
                 }
             }
             return CallNextHookEx(_keyboardHook, nCode, wParam, lParam);
@@ -227,8 +232,11 @@ namespace GoodWin.Utils
         private const int WM_SYSKEYDOWN = 0x0104;
         private const int WM_SYSKEYUP = 0x0105;
         private const uint MOUSEEVENTF_MOVE = 0x0001;
+        private const uint MOUSEEVENTF_WHEEL = 0x0800;
         private const uint LLMHF_INJECTED = 0x00000001;
         private const uint LLMHF_LOWER_IL_INJECTED = 0x00000002;
+        private const uint LLKHF_INJECTED = 0x00000010;
+        private const uint LLKHF_LOWER_IL_INJECTED = 0x00000002;
 
         [StructLayout(LayoutKind.Sequential)]
         private struct POINT { public int x, y; }
@@ -237,6 +245,16 @@ namespace GoodWin.Utils
         {
             public POINT pt;
             public uint mouseData;
+            public uint flags;
+            public uint time;
+            public IntPtr dwExtraInfo;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct KBDLLHOOKSTRUCT
+        {
+            public uint vkCode;
+            public uint scanCode;
             public uint flags;
             public uint time;
             public IntPtr dwExtraInfo;
@@ -323,9 +341,8 @@ namespace GoodWin.Utils
                         {
                             int dx = data.pt.x - _lastMousePt.x;
                             int dy = data.pt.y - _lastMousePt.y;
-                            _lastMousePt.x += dx;
-                            _lastMousePt.y -= dy;
                             mouse_event(MOUSEEVENTF_MOVE, dx, -dy, 0, UIntPtr.Zero);
+                            GetCursorPos(out _lastMousePt);
                             return new IntPtr(1);
                         }
                         _lastMousePt = data.pt;
@@ -335,6 +352,7 @@ namespace GoodWin.Utils
             return CallNextHookEx(_mouseHook, nCode, wParam, lParam);
         }
 
+        private const uint INPUT_MOUSE = 0;
         private const uint INPUT_KEYBOARD = 1;
         private const uint KEYEVENTF_KEYUP = 0x0002;
         private const uint KEYEVENTF_UNICODE = 0x0004;
@@ -361,6 +379,19 @@ namespace GoodWin.Utils
                 }
             };
             SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
+        }
+
+        public void SendWheel(int delta)
+        {
+            var input = new INPUT
+            {
+                type = INPUT_MOUSE,
+                U = new InputUnion
+                {
+                    mi = new MOUSEINPUT { mouseData = (uint)delta, dwFlags = MOUSEEVENTF_WHEEL }
+                }
+            };
+            SendInput(1, new[] { input }, Marshal.SizeOf<INPUT>());
         }
 
         // Unicode-ввод символов без учёта раскладки

@@ -12,6 +12,7 @@ namespace GoodWin.Debuffs.Hard
         public override string Name => "Блок I";
         public override void Apply()
         {
+            InputHookHost.Instance.SendKey((int)Keys.I);
             InputHookHost.Instance.BlockKey((int)Keys.I);
             Console.WriteLine($"[BlockI] blocked for {Duration}s");
         }
