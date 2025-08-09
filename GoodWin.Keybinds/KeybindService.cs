@@ -19,6 +19,8 @@ public sealed class KeybindService : IKeybindService, IDisposable
 
     public IReadOnlyDictionary<string, string> Bindings => _bindings;
 
+    public string? CurrentPath => _currentPath;
+
     public event EventHandler? BindingsChanged;
 
     public void Reload()

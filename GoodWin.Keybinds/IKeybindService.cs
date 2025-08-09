@@ -5,4 +5,5 @@ public interface IKeybindService
     IReadOnlyDictionary<string, string> Bindings { get; }
     event EventHandler? BindingsChanged;
     void Reload();
+    string? CurrentPath { get; }
 }
