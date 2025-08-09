@@ -40,7 +40,9 @@ namespace GoodWin.Tracker
         {
             try
             {
-                var bounds = Screen.PrimaryScreen.Bounds;
+                var screen = Screen.PrimaryScreen;
+                if (screen is null) return;
+                var bounds = screen.Bounds;
                 using var bmp = new Bitmap(bounds.Width, bounds.Height);
                 using var g = Graphics.FromImage(bmp);
                 g.CopyFromScreen(bounds.Location, Point.Empty, bounds.Size);

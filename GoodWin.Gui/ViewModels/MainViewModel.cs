@@ -288,8 +288,10 @@ namespace GoodWin.Gui.ViewModels
             OnPropertyChanged(nameof(AnyCategoryEnabled));
         }
 
-        private async Task RunManualDebuff(IDebuff debuff)
+        private async Task RunManualDebuff(IDebuff? debuff)
         {
+            if (debuff is null) return;
+
             var notify = new DebuffNotificationWindow(debuff.Name, "Описание дебаффа");
             notify.Show();
             await Task.Delay(3000);
@@ -331,10 +333,12 @@ namespace GoodWin.Gui.ViewModels
         private void ToggleHeroTracking(bool enabled)
         {
             if (enabled)
-            {
-                var capture = new ScreenCaptureService(60);
-                var bounds = System.Windows.Forms.Screen.PrimaryScreen.Bounds;
-                var minimapRect = new System.Drawing.Rectangle(0, bounds.Height - 256, 256, 256);
+                {
+                    var capture = new ScreenCaptureService(60);
+                    var screen = System.Windows.Forms.Screen.PrimaryScreen;
+                    if (screen is null) return;
+                    var bounds = screen.Bounds;
+                    var minimapRect = new System.Drawing.Rectangle(0, bounds.Height - 256, 256, 256);
                 _heroDetector = new HeroDetector(capture, minimapRect);
                 _heroDetector.HeroPositionUpdated += pos =>
                 {
