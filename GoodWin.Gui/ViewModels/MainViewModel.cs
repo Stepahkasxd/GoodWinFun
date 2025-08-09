@@ -24,6 +24,7 @@ namespace GoodWin.Gui.ViewModels
         private readonly DebuffsRegistry _registry = new();
         private readonly DebuffScheduler _scheduler = new();
         private readonly DotaCommandService _commandService = new();
+        private IDebuff? _activeDebuff;
         private readonly UserSettingsService _settingsService = new("usersettings.json");
         private readonly DispatcherTimer _timer;
         private readonly IKeybindService _keybindService;
@@ -105,6 +106,18 @@ namespace GoodWin.Gui.ViewModels
             _timer.Tick += (s, e) => CheckDotaProcess();
             _timer.Start();
             CheckDotaProcess();
+
+            PanicService.Triggered += (_, __) =>
+            {
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    _activeDebuff?.Remove();
+                    _activeDebuff = null;
+                    _debuffActive = false;
+                    _scheduler.Allow();
+                    InputHookHost.Instance.UnblockAllKeys();
+                });
+            };
         }
 
         private async Task InitCommands()
@@ -273,6 +286,7 @@ namespace GoodWin.Gui.ViewModels
             var duration = attr?.DurationSeconds ?? 60;
             try
             {
+                _activeDebuff = debuff;
                 debuff.Apply();
                 await Task.Delay(duration * 1000);
             }
@@ -283,6 +297,7 @@ namespace GoodWin.Gui.ViewModels
             finally
             {
                 debuff.Remove();
+                if (_activeDebuff == debuff) _activeDebuff = null;
                 EventLog.Add(DateTime.Now.ToString("T") + $" - {debuff.Name} завершён");
             }
         }
@@ -387,6 +402,7 @@ namespace GoodWin.Gui.ViewModels
         private async Task RunDebuff(ScheduledDebuffEntry entry)
         {
             _debuffActive = true;
+            _activeDebuff = entry.Debuff;
             entry.Debuff.Apply();
             try
             {
@@ -395,6 +411,7 @@ namespace GoodWin.Gui.ViewModels
             finally
             {
                 entry.Debuff.Remove();
+                if (_activeDebuff == entry.Debuff) _activeDebuff = null;
                 _debuffActive = false;
                 _scheduler.Allow();
             }

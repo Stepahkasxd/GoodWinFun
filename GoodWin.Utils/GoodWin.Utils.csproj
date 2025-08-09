@@ -14,6 +14,7 @@
     <PackageReference Include="System.Windows.Extensions" Version="9.0.7" />
     <PackageReference Include="Nefarius.ViGEm.Client" Version="1.21.256" />
         <FrameworkReference Include="Microsoft.WindowsDesktop.App.WindowsForms" />
+    <ProjectReference Include="..\GoodWin.Core\GoodWin.Core.csproj" />
   </ItemGroup>
 
 </Project>
