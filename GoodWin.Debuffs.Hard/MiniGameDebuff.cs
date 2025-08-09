@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using Path = System.Windows.Shapes.Path; // resolve ambiguity with System.IO.Path
 using System.Windows.Threading;
 
 namespace GoodWin.Debuffs.Hard
@@ -45,9 +46,9 @@ namespace GoodWin.Debuffs.Hard
 
         private void ShowWindow()
         {
-            var hwnd = FindWindow(null, "Dota 2");
+            var hwnd = NativeMethods.FindWindow(null, "Dota 2");
             int width = 800, height = 600, left = 0, top = 0;
-            if (hwnd != IntPtr.Zero && GetWindowRect(hwnd, out var r))
+            if (hwnd != IntPtr.Zero && NativeMethods.GetWindowRect(hwnd, out var r))
             {
                 width = r.Right - r.Left;
                 height = r.Bottom - r.Top;
