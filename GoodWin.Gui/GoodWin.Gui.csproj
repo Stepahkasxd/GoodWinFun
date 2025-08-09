@@ -5,6 +5,7 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
@@ -25,6 +26,11 @@
     <None Update="Presets/*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Installer\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="app.manifest" />
   </ItemGroup>
 
 </Project>
