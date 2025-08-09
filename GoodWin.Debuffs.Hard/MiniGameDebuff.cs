@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace GoodWin.Debuffs.Hard
 {
@@ -23,6 +24,10 @@ namespace GoodWin.Debuffs.Hard
         private Point _startPoint;
         private int _completed;
         private const int WireCount = 4;
+        private DispatcherTimer? _timer;
+        private DateTime _deadline;
+        private TextBlock? _timerText;
+        private const int TimeLimitSec = 10;
 
         public override string Name => "Мини-игра";
 
@@ -74,6 +79,22 @@ namespace GoodWin.Debuffs.Hard
             _canvas.MouseMove += Canvas_MouseMove;
             _canvas.MouseLeftButtonUp += Canvas_MouseLeftButtonUp;
             _window.Content = _canvas;
+
+            _timerText = new TextBlock
+            {
+                Foreground = Brushes.White,
+                FontSize = 24,
+                FontWeight = FontWeights.Bold
+            };
+            Canvas.SetRight(_timerText, 20);
+            Canvas.SetTop(_timerText, 20);
+            _canvas.Children.Add(_timerText);
+
+            _deadline = DateTime.Now.AddSeconds(TimeLimitSec);
+            _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            _timer.Tick += Timer_Tick;
+            _timer.Start();
+            Timer_Tick(null, EventArgs.Empty);
 
             BuildPorts(width, height);
             _window.ShowDialog();
@@ -166,6 +187,21 @@ namespace GoodWin.Debuffs.Hard
             _canvas.ReleaseMouseCapture();
         }
 
+        private void Timer_Tick(object? sender, EventArgs e)
+        {
+            var remaining = _deadline - DateTime.Now;
+            if (_timerText != null)
+                _timerText.Text = Math.Max(0, (int)Math.Ceiling(remaining.TotalSeconds)).ToString();
+            if (remaining <= TimeSpan.Zero)
+            {
+                _timer?.Stop();
+                _timer = null;
+                InputHookHost.Instance.UnblockAllKeys();
+                InputHookHost.Instance.Cmd("disconnect");
+                _window?.Close();
+            }
+        }
+
         private void RightPort_MouseUp(object sender, MouseButtonEventArgs e)
         {
             if (_canvas == null || _currentWire == null || _startPort == null) return;
@@ -187,7 +223,10 @@ namespace GoodWin.Debuffs.Hard
                 _startPort.MouseLeftButtonDown -= LeftPort_MouseDown;
                 _completed++;
                 if (_completed >= WireCount)
+                {
+                    _timer?.Stop();
                     _window?.Close();
+                }
             }
             else
             {
@@ -216,6 +255,8 @@ namespace GoodWin.Debuffs.Hard
 
         public override void Remove()
         {
+            _timer?.Stop();
+            _timer = null;
             if (_window != null)
             {
                 _window.Dispatcher.Invoke(() => _window.Close());
