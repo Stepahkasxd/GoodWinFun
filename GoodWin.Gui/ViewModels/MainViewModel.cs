@@ -218,7 +218,13 @@ namespace GoodWin.Gui.ViewModels
                                     args[i] = _keybindService;
                                     continue;
                                 }
-                                var val = GetSettingValue(parameters[i].Name);
+                                if (parameters[i].Name is null)
+                                {
+                                    ok = false;
+                                    DebugLogService.Log($"Debuff {t.Name} skipped: unnamed parameter at position {i}");
+                                    break;
+                                }
+                                var val = GetSettingValue(parameters[i].Name!); // Name checked above, cannot be null
                                 if (val == null)
                                 {
                                     ok = false;
